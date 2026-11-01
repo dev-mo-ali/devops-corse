@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars, then replace the AMI placeholder.
+aws_region = "us-east-1"
+ami_id     = "REPLACE_WITH_AMAZON_LINUX_X86_64_AMI_ID"
+name       = "terraform-student"
