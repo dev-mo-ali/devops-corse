@@ -4,26 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7fafc">
-  <meta name="description" content="Explore the AWS and Terraform learning courses, with practical lessons, diagrams and hands-on exercises.">
-  <title>Cloud & Infrastructure — Course Library</title>
+  <meta name="description" content="Explore AWS, Terraform, Git, and environment variables with practical lessons, diagrams, and hands-on exercises.">
+  <title>Technology Course Library</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root{color-scheme:light;--bg:#f7fafc;--text:#102033;--muted:#607084;--line:#e7edf2}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 'DM Sans',sans-serif;min-height:100dvh;display:flex;flex-direction:column}h1,h2,.brand{font-family:'Space Grotesk',sans-serif}header{min-height:72px;padding:16px 28px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;letter-spacing:.02em}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#eff6ff;color:#2563eb}.brand small{display:block;font:11px 'DM Sans',sans-serif;letter-spacing:.08em;color:var(--muted);margin-top:3px}.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px}main{width:100%;max-width:1180px;margin:auto;padding:64px 48px 72px;flex:1}.eyebrow{color:#2563eb;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin:0 0 16px}h1{font-size:clamp(38px,5.4vw,68px);line-height:1.05;letter-spacing:-.045em;margin:0 0 20px;max-width:850px}.lead{font-size:21px;color:var(--muted);max-width:740px;margin:0 0 38px}.courses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.course{--accent:#b86a00;--tint:#fff7ed;display:flex;flex-direction:column;color:inherit;text-decoration:none;background:#fff;border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:20px;padding:30px;box-shadow:0 10px 30px rgba(26,53,78,.06);transition:transform .18s,box-shadow .18s,border-color .18s}.course.terraform{--accent:#7352a6;--tint:#f2ecf9}.course:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 16px 36px rgba(26,53,78,.12)}.course:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.course-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.icon{display:grid;place-items:center;width:52px;height:52px;background:var(--tint);color:var(--accent);border-radius:14px;font-weight:800;font-size:18px}.course-number{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--accent)}h2{font-size:30px;letter-spacing:-.025em;line-height:1.15;margin:0 0 12px}.description{margin:0;color:var(--muted);font-size:16px;line-height:1.7}.topics{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 30px}.topics span{background:var(--tint);color:var(--accent);border-radius:999px;padding:6px 11px;font-size:12px}.open{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;border-top:1px solid var(--line);padding-top:20px;color:var(--accent);font-size:14px;font-weight:700}.open span:last-child{font-size:22px}.hint{font-size:14px;color:var(--muted);margin:28px 0 0}footer{background:#fff;border-top:1px solid var(--line);padding:18px 28px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:16px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 'DM Sans',sans-serif;min-height:100dvh;display:flex;flex-direction:column}h1,h2,.brand{font-family:'Space Grotesk',sans-serif}header{min-height:72px;padding:16px 28px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:700;letter-spacing:.02em}.brand-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#eff6ff;color:#2563eb}.brand small{display:block;font:11px 'DM Sans',sans-serif;letter-spacing:.08em;color:var(--muted);margin-top:3px}.tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 12px}main{width:100%;max-width:1180px;margin:auto;padding:64px 48px 72px;flex:1}.eyebrow{color:#2563eb;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin:0 0 16px}h1{font-size:clamp(38px,5.4vw,68px);line-height:1.05;letter-spacing:-.045em;margin:0 0 20px;max-width:850px}.lead{font-size:21px;color:var(--muted);max-width:740px;margin:0 0 38px}.courses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.course{--accent:#b86a00;--tint:#fff7ed;display:flex;flex-direction:column;color:inherit;text-decoration:none;background:#fff;border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:20px;padding:30px;box-shadow:0 10px 30px rgba(26,53,78,.06);transition:transform .18s,box-shadow .18s,border-color .18s}.course.terraform{--accent:#7352a6;--tint:#f2ecf9}.course.git{--accent:#d94b32;--tint:#fff0eb}.course:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 16px 36px rgba(26,53,78,.12)}.course:focus-visible{outline:3px solid var(--accent);outline-offset:4px}.course-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.icon{display:grid;place-items:center;width:52px;height:52px;background:var(--tint);color:var(--accent);border-radius:14px;font-weight:800;font-size:18px}.course-number{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--accent)}h2{font-size:30px;letter-spacing:-.025em;line-height:1.15;margin:0 0 12px}.description{margin:0;color:var(--muted);font-size:16px;line-height:1.7}.topics{display:flex;flex-wrap:wrap;gap:7px;margin:24px 0 30px}.topics span{background:var(--tint);color:var(--accent);border-radius:999px;padding:6px 11px;font-size:12px}.open{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;border-top:1px solid var(--line);padding-top:20px;color:var(--accent);font-size:14px;font-weight:700}.open span:last-child{font-size:22px}.hint{font-size:14px;color:var(--muted);margin:28px 0 0}footer{background:#fff;border-top:1px solid var(--line);padding:18px 28px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:16px}
     @media(max-width:700px){main{padding:40px 22px 48px}.courses{grid-template-columns:1fr;gap:20px}.course{padding:24px}.lead{font-size:18px}header{padding:14px 20px}.tag{display:none}footer{padding:18px 22px;flex-wrap:wrap}}
     @media(prefers-reduced-motion:reduce){.course{transition:none}.course:hover{transform:none}}
   </style>
 </head>
 <body>
   <header>
-    <div class="brand"><span class="brand-mark" aria-hidden="true">☁</span><div>COURSE LIBRARY<small>Cloud & infrastructure</small></div></div>
-    <span class="tag">2 learning paths</span>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">⌘</span><div>COURSE LIBRARY<small>Cloud & development</small></div></div>
+    <span class="tag">4 learning paths</span>
   </header>
   <main>
     <p class="eyebrow">Explore the courses</p>
-    <h1>Build your cloud<br>and infrastructure skills.</h1>
+    <h1>Build your cloud<br>and development skills.</h1>
     <p class="lead">Choose a course to explore clear explanations, architecture diagrams and practical examples, at your own pace.</p>
     <nav class="courses" aria-label="Choose a course">
       <a class="course aws" href="aws.html">
@@ -40,9 +40,23 @@
         <div class="topics"><span>HCL & workflow</span><span>State</span><span>Modules</span><span>AWS lab</span></div>
         <div class="open"><span>Open Terraform course</span><span aria-hidden="true">→</span></div>
       </a>
+      <a class="course git" href="git.html">
+        <div class="course-top"><span class="icon" aria-hidden="true">Git</span><span class="course-number">03 · VERSION CONTROL</span></div>
+        <h2>Git & GitHub</h2>
+        <p class="description">Start with version control, Git’s snapshot model, installation, first-time setup, and command-line help.</p>
+        <div class="topics"><span>Getting started</span><span>Snapshots</span><span>Setup</span><span>CLI help</span></div>
+        <div class="open"><span>Open Git course</span><span aria-hidden="true">→</span></div>
+      </a>
+      <a class="course environment" href="environment-variables.html" style="--accent:#087f72;--tint:#e8f6f2">
+        <div class="course-top"><span class="icon" aria-hidden="true">$_</span><span class="course-number">04 · SHELL ESSENTIALS</span></div>
+        <h2>Environment Variables</h2>
+        <p class="description">Understand how programs receive settings. Practice Bash and PowerShell on Windows and Linux, from temporary values to PATH and Terraform inputs.</p>
+        <div class="topics"><span>Bash & PowerShell</span><span>Windows & Linux</span><span>PATH</span><span>Practical labs</span></div>
+        <div class="open"><span>Open environment variables course</span><span aria-hidden="true">→</span></div>
+      </a>
     </nav>
-    <p class="hint">New to cloud infrastructure? Begin with AWS, then use Terraform to manage it as code.</p>
+    <p class="hint">Choose any course to start. Git provides a useful foundation for keeping track of your work in the AWS and Terraform courses.</p>
   </main>
-  <footer><span>Cloud & Infrastructure · Learning collection</span><span>AWS + Terraform</span></footer>
+  <footer><span>Cloud & Development · Learning collection</span><span>AWS · Terraform · Git · Environment variables</span></footer>
 </body>
 </html>
