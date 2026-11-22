@@ -36,7 +36,7 @@
   <a class="skip" href="#main">Skip to lesson</a>
   <header class="topbar">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–08</small></span></a>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–09</small></span></a>
     <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#course-topics">Topics list</a></nav>
   </header>
   <div class="shell">
@@ -131,6 +131,15 @@
         <a href="#container-process-lab" style="--dot:#a76a19"><span class="nav-dot"></span>Observe the processes</a>
         <a href="#container-process-exit" style="--dot:#b33e64"><span class="nav-dot"></span>Process exit and cleanup</a>
       </nav>
+      <p class="sidebar-label">TOPIC 09 · CONTAINERS AND OS</p>
+      <nav aria-label="Topic 9 sections">
+        <a href="#topic-9" style="--dot:#1f5897"><span class="nav-dot"></span>Does a container have an OS?</a>
+        <a href="#container-os-files" style="--dot:#997019"><span class="nav-dot"></span>What is in the image?</a>
+        <a href="#container-os-diagram" style="--dot:#087e78"><span class="nav-dot"></span>Userspace and kernel diagram</a>
+        <a href="#container-os-lab" style="--dot:#804496"><span class="nav-dot"></span>Compare distribution and kernel</a>
+        <a href="#container-os-terms" style="--dot:#aa5624"><span class="nav-dot"></span>Three related terms</a>
+        <a href="#container-os-responsibilities" style="--dot:#4a762c"><span class="nav-dot"></span>Who manages the processes?</a>
+      </nav>
     </aside>
     <main id="main">
       <section class="course-cover" id="course-topics">
@@ -147,6 +156,7 @@
           <a class="topic-link" href="#topic-6" style="--card:#233d53"><small>TOPIC 06</small><strong>Docker architecture, components and workflow</strong><span>Follow a run request from PowerShell to a running Nginx container.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-7" style="--card:#75508c"><small>TOPIC 07</small><strong>Basic Docker commands</strong><span>Run, inspect, stop, build, share, and clean up with a guided Nginx exercise.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-8" style="--card:#a34432"><small>TOPIC 08</small><strong>Container is a process</strong><span>Explore processes, PID 1, isolation, and the shared Linux kernel.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-9" style="--card:#1f5897"><small>TOPIC 09</small><strong>Does a container have an OS?</strong><span>Userspace, shared kernels, distribution images, and container host operating systems.</span><em>Open topic →</em></a>
         </nav>
       </section>
       <section class="module-intro topic-zero" id="why-containers">
@@ -1042,6 +1052,73 @@ docker rm process-demo</pre></div>
 <p><code>stop</code> sends the configured stop signal to the main process. If it does not exit within the grace period, Docker sends SIGKILL. Removing this stopped container deletes its writable layer.</p>
 <details><summary>Check your understanding · does closing an exec shell stop Nginx?</summary><p>Exiting a shell opened with <code>docker exec -it process-demo sh</code> ends that extra process. Nginx continues while its main process is running. By contrast, if a shell is the container’s main process, exiting it ends that container’s run.</p></details>
 <p class="source">See Docker’s <a href="https://docs.docker.com/reference/cli/docker/container/stop/">stop behavior</a> and <a href="https://docs.docker.com/engine/containers/multi-service_container/">main-process responsibilities</a>.</p>
+      </section>
+      <section class="topic" id="topic-9" style="--accent:#1f5897;--tint:#edf4ff">
+<p class="eyebrow">Docker foundations · Topic 09</p><h2>Does a container have an OS?</h2>
+<p class="lead">A Linux container can include a distribution’s userspace files—libraries, utilities, and configuration. Its processes use the Linux kernel provided by the Docker host.</p>
+<div class="grid"><div class="mini"><h3>Userspace</h3><p>The application, language runtime, libraries, shell, and other files included in the image.</p></div><div class="mini"><h3>Kernel</h3><p>The running core that schedules processes, manages memory, handles system calls, and controls access to hardware.</p></div></div>
+<p>“Ubuntu container” describes an environment built from Ubuntu files. A traditional Ubuntu virtual machine boots a guest kernel as part of its own operating system.</p>
+<p class="source">Discussion prompt from <a href="https://www.reddit.com/r/devops/comments/1gbi3kt/how_come_containers_dont_have_an_os/">r/devops</a>. Further reading includes the accessible introduction to <a href="https://medium.com/@PlanB./do-containers-have-an-operating-system-a-deep-dive-into-container-architecture-f7eba4642767">Mr.PlanB’s member-only article</a>.</p>
+      </section>
+
+      <section class="topic" id="container-os-files" style="--accent:#997019;--tint:#fff7e5">
+<p class="kicker">Topic 09 · Image contents</p><h2>Why do images have distribution names?</h2>
+<div class="table-scroll"><table><thead><tr><th>Image starting point</th><th>What it provides</th><th>What you add</th></tr></thead><tbody>
+<tr><td>Ubuntu or Debian</td><td>A distribution root filesystem with its selected tools and libraries.</td><td>Your application and required packages.</td></tr>
+<tr><td>Alpine</td><td>A compact userspace, typically including BusyBox tools and musl libc.</td><td>Your application and compatible dependencies.</td></tr>
+<tr><td><code>FROM scratch</code></td><td>An empty starting point for the image filesystem.</td><td>The executable and every runtime file it needs.</td></tr>
+</tbody></table></div>
+<p>The image determines which commands and libraries exist. A shell, package manager, or <code>/etc/os-release</code> file may be absent from a minimal image. The program still uses the host kernel.</p>
+<div class="callout"><p>Installing packages updates the container’s userspace files. Updating the running kernel is a host operation. Application binaries must also be compatible with the kernel interfaces and CPU architecture they run on.</p></div>
+<p class="source">See <a href="https://docs.docker.com/build/building/base-images/">Docker’s base image and scratch documentation</a>.</p>
+      </section>
+
+      <section class="topic" id="container-os-diagram" style="--accent:#087e78;--tint:#e7f7f3">
+<p class="kicker">Topic 09 · Architecture image</p><h2>Two distributions, one host kernel</h2>
+<figure class="process-poster"><a href="assets/container-os-userspace-kernel.png" target="_blank" rel="noopener"><img src="assets/container-os-userspace-kernel.png" width="1536" height="1024" alt="Ubuntu and Alpine containers each contain an application and distribution files. Both applications communicate through system calls with one shared Linux kernel on the Docker host."></a>
+<figcaption><a href="assets/container-os-userspace-kernel.png" target="_blank" rel="noopener">Open full-size image ↗</a> · <a href="assets/container-os-userspace-kernel.png" download>Download diagram PNG</a></figcaption></figure>
+<p>In the standard Linux container setup shown here, both applications call the same running kernel. Docker Desktop supplies a Linux host environment for Linux containers on Windows.</p>
+<p class="source">See <a href="https://blog.risingstack.com/operating-system-containers-vs-application-containers/">RisingStack’s shared-kernel explanation</a> and <a href="https://docs.docker.com/learn/content/what-is-a-container/">Docker’s explanation of containers on Windows and macOS</a>.</p>
+      </section>
+
+      <section class="topic" id="container-os-lab" style="--accent:#804496;--tint:#f6edfb">
+<p class="kicker">Topic 09 · Student exercise</p><h2>Ask two different questions</h2>
+<p>With Docker Desktop running in Linux container mode, run these commands in PowerShell. Each command creates a temporary container and removes it when the command finishes.</p>
+<div class="codebox"><div class="code-label">PowerShell · Ubuntu files and kernel release</div><pre>docker run --rm ubuntu:24.04 sh -c "cat /etc/os-release; uname -r"</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · Alpine files and kernel release</div><pre>docker run --rm alpine:3.22 sh -c "cat /etc/os-release; uname -r"</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · Docker host kernel version</div><pre>docker info --format '{{.KernelVersion}}'</pre></div>
+<div class="grid"><div class="mini"><h3><code>/etc/os-release</code></h3><p>Describes the distribution files in the container. Expect Ubuntu in the first run and Alpine in the second.</p></div><div class="mini"><h3><code>uname -r</code></h3><p>Reports the running kernel release. On the same standard Docker host, expect the same release for both containers and the Docker host.</p></div></div>
+<p>Compare the actual strings from your machine. On Windows, this is Docker Desktop’s Linux kernel version. The downloaded images remain cached after these temporary containers exit.</p>
+<p class="source">See the <a href="https://man7.org/linux/man-pages/man1/uname.1.html">uname manual</a> and the <a href="https://www.reddit.com/r/devops/comments/1gbi3kt/how_come_containers_dont_have_an_os/">distribution-versus-kernel discussion</a>.</p>
+      </section>
+
+      <section class="topic" id="container-os-terms" style="--accent:#aa5624;--tint:#fff1e7">
+<p class="kicker">Topic 09 · Terminology</p><h2>Application container, OS container, container OS</h2>
+<div class="grid three">
+<div class="mini"><h3>Application container</h3><p>Packages a service and its dependencies. A Docker Nginx container can run a master process and workers while serving one application role.</p></div>
+<div class="mini"><h3>OS / system container</h3><p>Provides a broader userspace environment, often with an init system and multiple services. Linux system containers such as LXC share the host kernel.</p></div>
+<div class="mini"><h3>Container host OS</h3><p>An operating system designed to run container workloads. AWS Bottlerocket is an example and supplies the host kernel and supporting software.</p></div>
+</div>
+<figure class="os-host-stack">
+<div class="grid"><div>Application container<br><small>App + dependencies</small></div><div>System container<br><small>Init + services + userspace</small></div></div>
+<p aria-hidden="true">↓ system calls ↓</p>
+<div class="os-kernel-band"><strong>Host operating system</strong><br>Shared Linux kernel + host services</div>
+<figcaption>Both container styles use host kernel services. “Container OS” in the supplied DEV article refers to the host operating system.</figcaption>
+</figure>
+<p class="source">Terminology from <a href="https://blog.risingstack.com/operating-system-containers-vs-application-containers/">RisingStack</a> and <a href="https://dev.to/aws-builders/introduction-to-container-operating-systems-49o8">Eyal Estrin’s DEV article</a>. Host OS example confirmed by <a href="https://aws.amazon.com/bottlerocket/">AWS Bottlerocket</a>.</p>
+      </section>
+
+      <section class="topic" id="container-os-responsibilities" style="--accent:#4a762c;--tint:#f0f8e8">
+<p class="kicker">Topic 09 · Connect to Topic 8</p><h2>Who does the operating-system work?</h2>
+<div class="table-scroll"><table><thead><tr><th>Responsibility</th><th>Handled by</th></tr></thead><tbody>
+<tr><td>CPU scheduling, memory management, system calls</td><td>The shared host kernel.</td></tr>
+<tr><td>Starting and monitoring container workloads</td><td>Docker, containerd, the shim, and the configured runtime.</td></tr>
+<tr><td>Application logic and child-process cleanup</td><td>The application and its process parents; an init process can help reap orphaned children.</td></tr>
+<tr><td>Files, libraries, and available tools</td><td>The image’s userspace plus runtime mounts and the container’s writable layer.</td></tr>
+</tbody></table></div>
+<details><summary>Check · Ubuntu and Alpine report different distribution names but the same kernel release. Why?</summary><p>Their filesystem contents come from different images. Both containers run processes on the same Linux Docker host, so both report its kernel release.</p></details>
+<details><summary>Check · does an Ubuntu image on Windows boot an Ubuntu kernel?</summary><p>Docker Desktop provides the Linux environment and kernel. The Ubuntu image supplies the userspace files used by the container’s processes.</p></details>
+<p class="source">Connect this with <a href="#container-process-tree">Topic 8’s process tree</a> and <a href="https://docs.docker.com/engine/containers/multi-service_container/">Docker’s main-process responsibilities</a>.</p>
       </section>
     </main>
   </div>
