@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f8fc">
-  <meta name="description" content="Docker foundations: servers, data centers, virtual machines, Linux processes, services, namespaces, and cgroups.">
-  <title>Docker Foundations — Servers, Processes &amp; Isolation</title>
+  <meta name="description" content="Docker foundations: containers, images, servers, Linux isolation, and a practical comparison of virtual machines and containers.">
+  <title>Docker Foundations — Containers and Virtual Machines</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,19 +18,35 @@
     main{min-width:0;padding:44px clamp(20px,5vw,72px) 78px}.intro{max-width:960px;margin-bottom:32px}.eyebrow{margin:0 0 11px;color:#0877c9;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em}.lead{max-width:780px;color:var(--muted);font-size:clamp(18px,2vw,22px);margin:0 0 20px}.path{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#45627c;font-size:13px;font-weight:700}.path span{padding:6px 10px;border-radius:999px;background:#e8f4ff}.path b{color:#8aa1b5}
     .topic{--accent:#1d4ed8;--tint:#eef4ff;max-width:1000px;margin:0 0 25px;padding:clamp(22px,3vw,34px);background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:18px;box-shadow:0 8px 25px #14263b08;scroll-margin-top:18px}.topic.data-center{--accent:#0f766e;--tint:#e8f8f4}.topic.vm{--accent:#7041b5;--tint:#f2ecfc}.topic.types{--accent:#bc5d16;--tint:#fff2e5}.topic.works{--accent:#087aaf;--tint:#e8f7fd}.topic.tradeoffs{--accent:#537a20;--tint:#f1f7e7}.kicker{display:inline-block;margin:0 0 10px;padding:5px 10px;border-radius:999px;background:var(--tint);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.topic h2{margin:0 0 14px;font-size:clamp(28px,3vw,38px);letter-spacing:-.035em}.topic h3{font-size:19px;margin:0 0 8px}.topic p{max-width:900px;margin:0 0 16px}.topic p:last-child{margin-bottom:0}.topic strong{color:var(--ink)}.topic code{padding:2px 5px;border-radius:4px;background:var(--tint);color:var(--accent);font-size:.9em}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:19px 0}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.mini{padding:18px;border:1px solid var(--line);border-radius:13px;background:#fcfdff}.mini p{margin:0;color:var(--muted);font-size:14px}.mini-label{display:block;margin-bottom:8px;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.11em}.callout{padding:15px 18px;margin:18px 0;background:var(--tint);border-left:4px solid var(--accent);border-radius:0 11px 11px 0}.callout p{margin:0}.diagram{overflow-x:auto;margin:23px 0;padding:15px;border:1px solid var(--line);border-radius:15px;background:var(--tint)}.diagram svg{display:block;width:100%;min-width:620px;height:auto}.diagram figcaption{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}.steps{counter-reset:step;list-style:none;padding:0;margin:19px 0;display:grid;gap:10px}.steps li{position:relative;padding:12px 14px 12px 51px;border:1px solid var(--line);border-radius:11px;background:#fcfdff}.steps li:before{counter-increment:step;content:counter(step);position:absolute;left:13px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:var(--tint);color:var(--accent);font-size:12px;font-weight:800}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}.list-card{padding:19px;border-radius:14px;border:1px solid var(--line);background:#fcfdff}.list-card.good{border-top:4px solid #23804a}.list-card.caution{border-top:4px solid #b84c44}.list-card ul{margin:10px 0 0;padding-left:21px}.list-card li{margin:8px 0}.source{margin-top:19px!important;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.source a{font-weight:700}.finish{max-width:1000px;padding:14px 4px;color:var(--muted);font-size:13px}
     .sidebar-label:not(:first-child){margin-top:24px}.module-intro{max-width:1000px;margin:50px 0 26px;padding:28px 30px;border-radius:18px;background:#14263b;color:#fff;scroll-margin-top:18px}.module-intro .eyebrow{color:#86d3ff}.module-intro h2{font-size:clamp(30px,4vw,48px);letter-spacing:-.04em;margin:0 0 12px}.module-intro p:last-child{margin:0;color:#cedceb;max-width:790px}.topic.process{--accent:#a64d09;--tint:#fff2e6}.topic.daemon{--accent:#ae2253;--tint:#fff0f5}.topic.service{--accent:#4f46ad;--tint:#f1f0ff}.topic.namespace{--accent:#0e7490;--tint:#e8f8fd}.topic.cgroups{--accent:#7e35a5;--tint:#f8edff}.topic.connection{--accent:#24733f;--tint:#eaf8ef}.codebox{margin:16px 0 20px;overflow:hidden;border-radius:12px;background:#17283d;color:#eaf4ff}.codebox pre{margin:0;padding:15px 18px;overflow-x:auto;font:13px/1.6 Consolas,"Courier New",monospace}.code-label{padding:7px 16px;background:#25415e;color:#c7d9e9;font-size:10px;font-weight:800;letter-spacing:.08em}.topic table{width:100%;border-collapse:collapse;font-size:14px}.topic th,.topic td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.topic th{background:var(--tint)}.table-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:12px}.topic tr:last-child td{border-bottom:0}
+    .course-cover{max-width:1000px;min-height:calc(100dvh - 160px);margin:0 0 35px;padding:clamp(24px,4vw,42px);background:#fff;border:1px solid var(--line);border-top:5px solid #0877c9;border-radius:19px;box-shadow:0 10px 30px #14263b0a;scroll-margin-top:18px}.course-cover h1{margin-bottom:14px}.course-topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:27px}.topic-link{--card:#0877c9;display:flex;flex-direction:column;min-height:164px;padding:20px 22px;border:1px solid var(--line);border-top:4px solid var(--card);border-radius:14px;background:#fbfdff;color:var(--ink);text-decoration:none;transition:transform .18s,box-shadow .18s}.topic-link:hover{transform:translateY(-3px);box-shadow:0 9px 22px #14263b14}.topic-link:focus-visible{outline-color:var(--card)}.topic-link small{color:var(--card);font-size:11px;font-weight:800;letter-spacing:.1em}.topic-link strong{margin:7px 0 5px;font:700 23px/1.2 "Space Grotesk",sans-serif}.topic-link span{color:var(--muted);font-size:13px;line-height:1.5}.topic-link em{margin-top:auto;padding-top:13px;color:var(--card);font-size:13px;font-style:normal;font-weight:800}.module-intro.topic-zero{margin-top:0;background:#3b2548}.module-intro.topic-zero .eyebrow{color:#ffc1e0}.module-intro.topic-zero h2{margin:0 0 16px;font-size:clamp(39px,5.2vw,62px)}.module-intro.topic-zero p{max-width:800px}.topic.setup-zero{--accent:#a72d58;--tint:#fff0f6}.topic.container-zero{--accent:#176575;--tint:#e9f8fa}.topic.image-zero{--accent:#96610d;--tint:#fff6e7}.topic.registry-zero{--accent:#6f44a3;--tint:#f4effb}.intro h2{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em;line-height:1.15}.plain-next{display:inline-block;margin-top:5px;padding:9px 13px;border:1px solid currentColor;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none}
+    .module-intro.topic-three{background:#173b5c}.module-intro.topic-three .eyebrow{color:#9addff}.topic.architecture-three{--accent:#b9571f;--tint:#fff1e9}.topic.differences-three{--accent:#286f71;--tint:#e9f8f6}.topic.choose-three{--accent:#9a3980;--tint:#fbedf7}.topic.together-three{--accent:#426c2a;--tint:#f0f8e9}.decision{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}.decision .mini{border-top:4px solid var(--accent)}
+    .module-intro.topic-four{background:#164c50}.module-intro.topic-four .eyebrow{color:#a4f3e8}.topic.setup-choice{--accent:#007c7b;--tint:#e9faf7}.topic.setup-prepare{--accent:#a25224;--tint:#fff2e9}.topic.setup-repo{--accent:#7045a5;--tint:#f4effb}.topic.setup-install{--accent:#1d659f;--tint:#eaf5ff}.topic.setup-verify{--accent:#4d792a;--tint:#f0f8e7}.topic.setup-access{--accent:#ad3c61;--tint:#fff0f5}.topic.setup-desktop{--accent:#a3670a;--tint:#fff6e6}.topic.setup-trouble{--accent:#4d5ba8;--tint:#f0f1ff}
+    .module-intro.topic-five{background:#333b76}.module-intro.topic-five .eyebrow{color:#cdd3ff}.topic.win-ready{--accent:#315fa8;--tint:#edf4ff}.topic.win-hello{--accent:#087b70;--tint:#e8f8f3}.topic.win-web{--accent:#b65825;--tint:#fff2e9}.topic.win-manage{--accent:#8a438c;--tint:#f9eefb}.topic.win-help{--accent:#52732a;--tint:#f1f8e9}
     @media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:3;min-height:0;padding:7px 10px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.sidebar-label{display:none}.sidebar nav{display:flex;gap:4px;width:max-content}.sidebar a{white-space:nowrap;padding:8px 10px}main{padding:30px 19px 60px}}
-    @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col{grid-template-columns:1fr}.topic{padding:20px 18px}.path{font-size:11px}}
+    @media(max-width:850px){.sidebar{display:flex;align-items:center;gap:10px}.sidebar nav{flex:none}.sidebar nav:not(:last-child){border-right:1px solid var(--line);padding-right:10px}}
+    @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col,.decision,.course-topics{grid-template-columns:1fr}.course-cover{min-height:0;padding:23px 19px}.topic-link{min-height:0}.topic{padding:20px 18px}.path{font-size:11px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
   <a class="skip" href="#main">Skip to lesson</a>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 01–02</small></span></a>
-    <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#topic-2">Topic 2</a></nav>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–05</small></span></a>
+    <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#course-topics">Topics list</a></nav>
   </header>
   <div class="shell">
     <aside class="sidebar" aria-label="Course topic navigation">
+      <p class="sidebar-label">COURSE OVERVIEW</p>
+      <nav><a href="#course-topics" style="--dot:#0877c9"><span class="nav-dot"></span>All topics</a></nav>
+      <p class="sidebar-label">TOPIC 00 · WHY CONTAINERS?</p>
+      <nav>
+        <a href="#why-containers" style="--dot:#3b2548"><span class="nav-dot"></span>Topic 0 overview</a>
+        <a href="#setup-problem" style="--dot:#a72d58"><span class="nav-dot"></span>The setup problem</a>
+        <a href="#what-is-container" style="--dot:#176575"><span class="nav-dot"></span>What is a container?</a>
+        <a href="#what-is-image" style="--dot:#96610d"><span class="nav-dot"></span>What is an image?</a>
+        <a href="#image-sources" style="--dot:#6f44a3"><span class="nav-dot"></span>Where images come from</a>
+      </nav>
       <p class="sidebar-label">TOPIC 01 · SECTIONS</p>
       <nav>
         <a href="#overview" style="--dot:#0877c9"><span class="nav-dot"></span>Overview</a>
@@ -50,11 +67,120 @@
         <a href="#cgroups" style="--dot:#7e35a5"><span class="nav-dot"></span>cgroups</a>
         <a href="#linux-to-docker" style="--dot:#24733f"><span class="nav-dot"></span>Linux to Docker</a>
       </nav>
+      <p class="sidebar-label">TOPIC 03 · VM VS CONTAINER</p>
+      <nav>
+        <a href="#topic-3" style="--dot:#173b5c"><span class="nav-dot"></span>Topic 3 overview</a>
+        <a href="#vm-container-architecture" style="--dot:#b9571f"><span class="nav-dot"></span>Architecture</a>
+        <a href="#vm-container-differences" style="--dot:#286f71"><span class="nav-dot"></span>Key differences</a>
+        <a href="#vm-container-choose" style="--dot:#9a3980"><span class="nav-dot"></span>Which should I use?</a>
+        <a href="#vm-container-together" style="--dot:#426c2a"><span class="nav-dot"></span>Using both together</a>
+      </nav>
+      <p class="sidebar-label">TOPIC 04 · SET UP DOCKER</p>
+      <nav>
+        <a href="#topic-4" style="--dot:#164c50"><span class="nav-dot"></span>Setup overview</a>
+        <a href="#setup-choose" style="--dot:#007c7b"><span class="nav-dot"></span>Engine or Desktop?</a>
+        <a href="#setup-prepare" style="--dot:#a25224"><span class="nav-dot"></span>Prepare Ubuntu</a>
+        <a href="#setup-repository" style="--dot:#7045a5"><span class="nav-dot"></span>Add repository</a>
+        <a href="#setup-packages" style="--dot:#1d659f"><span class="nav-dot"></span>Install packages</a>
+        <a href="#setup-verify" style="--dot:#4d792a"><span class="nav-dot"></span>Verify installation</a>
+        <a href="#setup-permissions" style="--dot:#ad3c61"><span class="nav-dot"></span>Docker permissions</a>
+        <a href="#setup-desktop" style="--dot:#a3670a"><span class="nav-dot"></span>Docker Desktop</a>
+        <a href="#setup-troubleshoot" style="--dot:#4d5ba8"><span class="nav-dot"></span>Troubleshoot &amp; update</a>
+      </nav>
+      <p class="sidebar-label">TOPIC 05 · FIRST CONTAINER</p>
+      <nav>
+        <a href="#topic-5" style="--dot:#333b76"><span class="nav-dot"></span>Windows 11 overview</a>
+        <a href="#win-ready" style="--dot:#315fa8"><span class="nav-dot"></span>Start and verify Docker</a>
+        <a href="#win-hello" style="--dot:#087b70"><span class="nav-dot"></span>Run hello-world</a>
+        <a href="#win-web" style="--dot:#b65825"><span class="nav-dot"></span>Run a web container</a>
+        <a href="#win-manage" style="--dot:#8a438c"><span class="nav-dot"></span>Inspect and clean up</a>
+        <a href="#win-help" style="--dot:#52732a"><span class="nav-dot"></span>Troubleshooting</a>
+      </nav>
     </aside>
     <main id="main">
+      <section class="course-cover" id="course-topics">
+        <p class="eyebrow">Docker foundations · Course overview</p>
+        <h1>Explore the Docker course</h1>
+        <p class="lead">Choose a topic to start. Each topic builds on the one before it, from the reason for containers to the Linux features and virtual machines beneath them.</p>
+        <nav class="course-topics" aria-label="Choose a Docker topic">
+          <a class="topic-link" href="#why-containers" style="--card:#9d315e"><small>TOPIC 00</small><strong>Why containers?</strong><span>The setup problem, containers, images, and registries.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#overview" style="--card:#2461ae"><small>TOPIC 01</small><strong>Servers, data centers &amp; VMs</strong><span>Physical infrastructure and how virtual machines work.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-2" style="--card:#0e7490"><small>TOPIC 02</small><strong>Linux foundations</strong><span>Processes, daemons, services, namespaces, and cgroups.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-3" style="--card:#5d7423"><small>TOPIC 03</small><strong>VM vs container</strong><span>Architecture, tradeoffs, use cases, and running both together.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-4" style="--card:#007c7b"><small>TOPIC 04</small><strong>Set up Docker</strong><span>Install and verify Docker Engine on Ubuntu, or choose Docker Desktop.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-5" style="--card:#4655a7"><small>TOPIC 05</small><strong>Your first container on Windows 11</strong><span>Verify Docker Desktop, run hello-world, and open a web server.</span><em>Open topic →</em></a>
+        </nav>
+      </section>
+      <section class="module-intro topic-zero" id="why-containers">
+        <p class="eyebrow">Docker foundations · Topic 00</p>
+        <h2>Why containers?</h2>
+        <p>Imagine joining a team that builds a to-do app: a Node.js backend, a React frontend, and a database. Before you can change a line of code, you need the right runtime, database, and libraries. Topic 0 explains how containers make that setup more repeatable. There are no commands to run yet.</p>
+      </section>
+
+      <section class="topic setup-zero" id="setup-problem">
+        <p class="kicker">01 · Berry · The setup problem</p>
+        <h2>“Works on my machine” is a warning sign</h2>
+        <p>Your laptop, a teammate's laptop, the CI server, and production can each have a different Node.js version or dependency set. Another project on your laptop may require an older version. Small differences can change how the to-do app builds or runs.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 235" role="img" aria-labelledby="setup-title setup-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="setup-title">Different machines have different app dependencies</title><desc id="setup-desc">Developer A, Developer B, CI, and production have differing Node.js and database versions, creating inconsistent behavior.</desc>
+            <g stroke="#d8799b" stroke-width="2" fill="#fff"><rect x="24" y="24" width="164" height="145" rx="13"/><rect x="207" y="24" width="164" height="145" rx="13"/><rect x="390" y="24" width="164" height="145" rx="13"/><rect x="573" y="24" width="164" height="145" rx="13"/></g>
+            <g fill="#79203f" text-anchor="middle"><text x="106" y="53" font-size="17" font-weight="700">Your laptop</text><text x="289" y="53" font-size="17" font-weight="700">Teammate</text><text x="472" y="53" font-size="17" font-weight="700">CI server</text><text x="655" y="53" font-size="17" font-weight="700">Production</text></g>
+            <g fill="#a72d58" text-anchor="middle" font-size="14"><text x="106" y="89">Node 20</text><text x="106" y="119">DB 15</text><text x="289" y="89">Node 22</text><text x="289" y="119">DB 15</text><text x="472" y="89">Node 22</text><text x="472" y="119">DB 16</text><text x="655" y="89">Node 20</text><text x="655" y="119">DB 16</text></g>
+            <path d="M106 170v25M289 170v25M472 170v25M655 170v25" stroke="#a72d58" stroke-width="3"/><rect x="185" y="195" width="390" height="30" rx="9" fill="#a72d58"/><text x="380" y="215" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Same app · different environments · unpredictable results</text>
+          </svg>
+          <figcaption>Version numbers here illustrate the mismatch; they are not required versions for the to-do app.</figcaption>
+        </figure>
+        <div class="grid three"><div class="mini"><span class="mini-label">LOCAL SETUP</span><p>Everyone installs and maintains dependencies separately.</p></div><div class="mini"><span class="mini-label">OTHER PROJECTS</span><p>One project can need a different runtime version.</p></div><div class="mini"><span class="mini-label">DEPLOYMENT</span><p>CI and production may behave differently from a laptop.</p></div></div>
+      </section>
+
+      <section class="topic container-zero" id="what-is-container">
+        <p class="kicker">02 · Ocean · Container</p>
+        <h2>What is a container?</h2>
+        <p>A <strong>container</strong> is a running instance of an image. It runs the app with the files and settings the image supplies, in an isolated environment. Instead of installing the app's runtime and libraries separately on every machine, the team can use the same image in each place.</p>
+        <div class="callout"><p><strong>For the to-do app:</strong> the backend, frontend, and database can run as separate containers. Each component gets the environment it expects, while the team shares a repeatable description of the whole app.</p></div>
+        <p>On Linux, container processes share the host kernel. A container is therefore different from a virtual machine, which normally has its own guest operating system. Topic 1 covers VMs, and Topic 2 explains the Linux isolation beneath containers.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 210" role="img" aria-labelledby="container-title container-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="container-title">One image starts repeatable containers</title><desc id="container-desc">One packaged backend image starts containers for a laptop, CI, and production, each with the same application files and dependencies.</desc>
+            <rect x="25" y="62" width="175" height="95" rx="14" fill="#176575"/><text x="112" y="98" text-anchor="middle" fill="#fff" font-size="20" font-weight="700">App image</text><text x="112" y="124" text-anchor="middle" fill="#d4f6f7" font-size="13">code + runtime + libraries</text>
+            <path d="M202 110h70M272 110V46M272 110v64M272 46h59M272 110h59M272 174h59" fill="none" stroke="#176575" stroke-width="4"/>
+            <g fill="#fff" stroke="#5ca4ad" stroke-width="3"><rect x="333" y="18" width="385" height="55" rx="11"/><rect x="333" y="83" width="385" height="55" rx="11"/><rect x="333" y="148" width="385" height="55" rx="11"/></g>
+            <g fill="#14525c" font-size="16" font-weight="700"><text x="357" y="51">Laptop container · app runs here</text><text x="357" y="116">CI container · same starting files</text><text x="357" y="181">Production container · same starting files</text></g>
+          </svg>
+          <figcaption>Using one image reduces setup differences; runtime configuration and host conditions still matter.</figcaption>
+        </figure>
+      </section>
+
+      <section class="topic image-zero" id="what-is-image">
+        <p class="kicker">03 · Gold · Image</p>
+        <h2>What is an image?</h2>
+        <p>An <strong>image</strong> is the reusable package a container starts from. It can contain application code, a language runtime, libraries, operating-system user-space files, and a default command. An image does not contain a separate running kernel.</p>
+        <div class="grid"><div class="mini"><span class="mini-label">IMAGE · PACKAGE</span><h3>Built and shared</h3><p>A read-only template, often assembled in layers from a Dockerfile.</p></div><div class="mini"><span class="mini-label">CONTAINER · INSTANCE</span><h3>Created and run</h3><p>A live instance with its own process state and writable changes.</p></div></div>
+        <p>Starting multiple containers from one image gives each of them the same starting files. Configuration, external data, CPU architecture, and host environment can still affect behavior, so teams also manage those parts deliberately.</p>
+      </section>
+
+      <section class="topic registry-zero" id="image-sources">
+        <p class="kicker">04 · Violet · Image sources</p>
+        <h2>Where do images come from?</h2>
+        <p>A team can <strong>build its own image</strong> from a Dockerfile, or <strong>use an image published by someone else</strong>. A <strong>registry</strong> stores and distributes images. Docker Hub is one example; organizations may also use private registries.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 210" role="img" aria-labelledby="registry-title registry-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="registry-title">How an image is built and shared</title><desc id="registry-desc">A Dockerfile and app source build an image. The image can be stored in a registry and used by a laptop, CI server, or production host.</desc>
+            <g stroke="#a884cd" stroke-width="3"><rect x="20" y="55" width="153" height="100" rx="14" fill="#fff"/><rect x="229" y="55" width="153" height="100" rx="14" fill="#fff"/><rect x="438" y="55" width="153" height="100" rx="14" fill="#fff"/></g><rect x="633" y="43" width="107" height="124" rx="13" fill="#6f44a3"/>
+            <g fill="#56327e" text-anchor="middle" font-weight="700"><text x="96" y="93" font-size="17">Dockerfile</text><text x="96" y="119" font-size="14">+ app source</text><text x="305" y="108" font-size="19">Image</text><text x="514" y="93" font-size="18">Registry</text><text x="514" y="119" font-size="13">stores images</text></g><g fill="#fff" text-anchor="middle" font-size="13" font-weight="700"><text x="686" y="79">Laptop</text><text x="686" y="106">CI</text><text x="686" y="133">Production</text></g>
+            <path d="M175 106h43M384 106h43M594 106h28" stroke="#6f44a3" stroke-width="4" marker-end="url(#registry-arrow)"/><text x="198" y="83" text-anchor="middle" fill="#56327e" font-size="12">build</text><text x="406" y="83" text-anchor="middle" fill="#56327e" font-size="12">share</text><text x="611" y="83" text-anchor="middle" fill="#56327e" font-size="12">use</text><defs><marker id="registry-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#6f44a3"/></marker></defs>
+          </svg>
+          <figcaption>Build once, share the image, then start containers where the app needs to run.</figcaption>
+        </figure>
+        <p>An image reference names a <strong>registry</strong>, a <strong>repository</strong> within it, and often a <strong>tag</strong> for a version or variant. For example, <code>docker.io/library/node:22-slim</code> identifies a Node.js image on Docker Hub. A tag is a label and may later point to a newer image; a digest identifies exact image content.</p>
+        <div class="callout"><p><strong>No hands-on setup in Topic 0.</strong> When you are ready to run the to-do app, continue with <a href="https://docs.docker.com/learn/content/what-is-a-container/?path=get-started-with-docker-containers#next" target="_blank" rel="noopener noreferrer">Docker's next guide</a>.</p></div>
+        <p class="source">Source: <a href="https://docs.docker.com/learn/content/what-is-a-container/?path=get-started-with-docker-containers" target="_blank" rel="noopener noreferrer">Docker Learn · What is a container?</a> · <a href="https://docs.docker.com/get-started/docker-overview/" target="_blank" rel="noopener noreferrer">Docker overview</a></p>
+      </section>
+
       <section class="intro" id="overview">
         <p class="eyebrow">Docker foundations · Topic 01</p>
-        <h1>Servers, data centers<br>&amp; virtual machines</h1>
+        <h2>Servers, data centers<br>&amp; virtual machines</h2>
         <p class="lead">Before containers make sense, picture the computers that run them. Follow the path from a physical server, to a data center, to virtual machines sharing one host.</p>
         <div class="path" aria-label="Lesson path"><span>Server</span><b aria-hidden="true">→</b><span>Data center</span><b aria-hidden="true">→</b><span>Virtual machine</span></div>
       </section>
@@ -268,8 +394,241 @@ CPUQuota=100%</code></pre></div>
         <div class="callout"><p><strong>Core idea:</strong> a Linux container is made of ordinary processes with isolation and resource controls, alongside other security mechanisms. Namespaces and cgroups also work on an ordinary Linux server without Docker.</p></div>
         <p class="source">Further reading: <a href="https://man7.org/linux/man-pages/man7/namespaces.7.html" target="_blank" rel="noopener noreferrer">Namespaces</a> · <a href="https://man7.org/linux/man-pages/man7/cgroups.7.html" target="_blank" rel="noopener noreferrer">cgroups</a> · <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html" target="_blank" rel="noopener noreferrer">systemd sandboxing</a></p>
       </section>
-      <footer class="finish">End of Topic 02 · <a href="#overview">Back to Topic 01</a> · <a href="index.html">All courses</a></footer>
+      <section class="module-intro topic-three" id="topic-3">
+        <p class="eyebrow">Docker foundations · Topic 03</p>
+        <h2>Virtual machines vs containers</h2>
+        <p>Both let workloads share physical hardware, but they separate work at different layers. The key question is whether you need a whole guest operating system or an isolated application environment.</p>
+      </section>
+
+      <section class="topic architecture-three" id="vm-container-architecture">
+        <p class="kicker">Slide 01 · Copper · Architecture</p>
+        <h2>Where is the isolation boundary?</h2>
+        <p>A <strong>VM</strong> virtualizes hardware. Each VM has virtual hardware, a guest operating system, its own kernel, and applications. A typical <strong>container</strong> packages an application and its user-space dependencies while sharing the host operating system's kernel.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 336" role="img" aria-labelledby="compare-stack-title compare-stack-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="compare-stack-title">Virtual machine and container architecture stacks</title><desc id="compare-stack-desc">On the left, two VMs each include an application and guest OS above a hypervisor. On the right, two containers share a host OS kernel through a container runtime.</desc>
+            <text x="189" y="28" text-anchor="middle" fill="#934118" font-size="20" font-weight="700">Virtual machines</text><text x="571" y="28" text-anchor="middle" fill="#934118" font-size="20" font-weight="700">Containers</text>
+            <g stroke="#ca8c66" stroke-width="2"><rect x="21" y="43" width="337" height="276" rx="14" fill="#fff"/><rect x="402" y="43" width="337" height="276" rx="14" fill="#fff"/></g>
+            <g fill="#fff5ee" stroke="#b9571f" stroke-width="2"><rect x="39" y="59" width="143" height="152" rx="9"/><rect x="197" y="59" width="143" height="152" rx="9"/></g>
+            <g fill="#8b3b10" font-size="14" font-weight="700" text-anchor="middle"><text x="110" y="83">VM A</text><text x="269" y="83">VM B</text></g><g fill="#edd1bb"><rect x="50" y="97" width="121" height="40" rx="6"/><rect x="208" y="97" width="121" height="40" rx="6"/><rect x="50" y="147" width="121" height="48" rx="6"/><rect x="208" y="147" width="121" height="48" rx="6"/></g><g fill="#713014" font-size="13" font-weight="700" text-anchor="middle"><text x="110" y="123">App</text><text x="269" y="123">App</text><text x="110" y="167">Guest OS</text><text x="110" y="184">+ kernel</text><text x="269" y="167">Guest OS</text><text x="269" y="184">+ kernel</text></g>
+            <rect x="39" y="222" width="301" height="35" rx="7" fill="#d17a46"/><text x="189" y="245" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Hypervisor</text><rect x="39" y="267" width="301" height="35" rx="7" fill="#944619"/><text x="189" y="290" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Physical hardware</text>
+            <g fill="#e5f5f0" stroke="#287a6d" stroke-width="2"><rect x="420" y="59" width="143" height="99" rx="9"/><rect x="579" y="59" width="143" height="99" rx="9"/></g><g fill="#175c52" font-size="13" font-weight="700" text-anchor="middle"><text x="491" y="85">Container A</text><text x="491" y="113">App +</text><text x="491" y="132">libraries</text><text x="650" y="85">Container B</text><text x="650" y="113">App +</text><text x="650" y="132">libraries</text></g>
+            <rect x="420" y="169" width="301" height="31" rx="7" fill="#81b9aa"/><text x="571" y="190" text-anchor="middle" fill="#104e44" font-size="13" font-weight="700">Container runtime</text><rect x="420" y="210" width="301" height="47" rx="7" fill="#4a9c86"/><text x="571" y="238" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Shared host OS kernel</text><rect x="420" y="267" width="301" height="35" rx="7" fill="#216b59"/><text x="571" y="290" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Physical hardware</text>
+          </svg>
+          <figcaption>VMs each run a guest kernel; typical containers share the host kernel.</figcaption>
+        </figure>
+        <div class="callout"><p><strong>Remember:</strong> a VM virtualizes a computer. A container isolates an application and its processes using the host kernel.</p></div>
+        <p class="source">Sources: <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener noreferrer">Microsoft Learn · Architecture</a> · <a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener noreferrer">Atlassian · Comparison</a></p>
+      </section>
+
+      <section class="topic differences-three" id="vm-container-differences">
+        <p class="kicker">Slide 02 · Sea green · Key differences</p>
+        <h2>How do they behave in practice?</h2>
+        <div class="table-scroll"><table><thead><tr><th>Question</th><th>Virtual machine</th><th>Typical container</th></tr></thead><tbody>
+          <tr><td><strong>Operating system</strong></td><td>Runs its own guest OS and kernel.</td><td>Uses the host kernel and packages needed user-space files.</td></tr>
+          <tr><td><strong>Isolation</strong></td><td>Usually a stronger boundary between workloads and the host.</td><td>Process isolation, with a shared-kernel boundary that needs careful hardening.</td></tr>
+          <tr><td><strong>Startup &amp; size</strong></td><td>Boots an OS and commonly uses more memory and disk.</td><td>Usually starts faster and needs less overhead because no guest OS boots.</td></tr>
+          <tr><td><strong>OS choice</strong></td><td>Can run a different supported guest OS.</td><td>Must be compatible with the kernel it runs on.</td></tr>
+          <tr><td><strong>Management</strong></td><td>Patch and manage each guest OS.</td><td>Rebuild images and redeploy containers; maintain the host kernel too.</td></tr>
+        </tbody></table></div>
+        <p>These are architectural tendencies, not fixed performance numbers. The result depends on the workload, image, VM configuration, host, storage, and network setup.</p>
+        <div class="callout"><p><strong>Windows exception:</strong> Microsoft also offers Hyper-V isolated containers, which place a container in a lightweight VM for a stronger boundary. The shared-kernel column describes the common process-isolated model.</p></div>
+        <p class="source">Sources: <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener noreferrer">Microsoft Learn · Feature table and Hyper-V isolation</a> · <a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener noreferrer">Atlassian · Pros and cons</a></p>
+      </section>
+
+      <section class="topic choose-three" id="vm-container-choose">
+        <p class="kicker">Slide 03 · Orchid · Choosing</p>
+        <h2>Which should you choose?</h2>
+        <p>Start with the workload's operating-system, isolation, and deployment needs. Neither choice is automatically safer or faster in every setup.</p>
+        <div class="decision">
+          <div class="mini"><span class="mini-label">A VM FITS WHEN...</span><h3>You need a full OS</h3><p>Run a different guest OS or kernel, manage an entire server environment, or use a stronger isolation boundary between tenants.</p></div>
+          <div class="mini"><span class="mini-label">A CONTAINER FITS WHEN...</span><h3>You package an app</h3><p>Deploy the same app and its dependencies repeatedly, start many short-lived workloads, or iterate quickly in development and CI.</p></div>
+          <div class="mini"><span class="mini-label">VM EXAMPLE</span><h3>Separate server environments</h3><p>Host independent operating systems for a legacy workload and a newer application on one physical machine.</p></div>
+          <div class="mini"><span class="mini-label">CONTAINER EXAMPLE</span><h3>To-do app components</h3><p>Package its frontend, backend, and database as separate deployable services on a suitable host.</p></div>
+        </div>
+        <p class="source">Further reading: <a href="https://contabo.com/blog/containers-vs-virtual-machines/" target="_blank" rel="noopener noreferrer">Contabo · Containers vs virtual machines</a> · <a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener noreferrer">Atlassian · Choosing and combining</a></p>
+      </section>
+
+      <section class="topic together-three" id="vm-container-together">
+        <p class="kicker">Slide 04 · Moss · Together</p>
+        <h2>Containers can run inside a VM</h2>
+        <p>The choice is not always either/or. A cloud provider can supply a VM, then your team installs a container runtime inside that VM and runs several application containers. The VM provides a guest OS and an outer boundary; containers package and separate the applications inside it.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 245" role="img" aria-labelledby="nested-title nested-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="nested-title">Containers running within a virtual machine</title><desc id="nested-desc">A physical server runs a hypervisor, which hosts a VM with a guest OS and container runtime. The VM runs frontend, backend, and database containers.</desc>
+            <rect x="25" y="12" width="710" height="221" rx="17" fill="#fff" stroke="#8caf74" stroke-width="3"/><g fill="#eef8e8" stroke="#7da964" stroke-width="2"><rect x="45" y="33" width="210" height="62" rx="10"/><rect x="275" y="33" width="210" height="62" rx="10"/><rect x="505" y="33" width="210" height="62" rx="10"/></g><g fill="#34591e" font-size="16" font-weight="700" text-anchor="middle"><text x="150" y="71">Frontend container</text><text x="380" y="71">Backend container</text><text x="610" y="71">Database container</text></g>
+            <rect x="45" y="108" width="670" height="34" rx="8" fill="#a8cd8d"/><text x="380" y="131" text-anchor="middle" fill="#244819" font-size="15" font-weight="700">Container runtime</text><rect x="45" y="152" width="670" height="34" rx="8" fill="#6fa554"/><text x="380" y="175" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">VM guest OS + its own kernel</text><rect x="45" y="196" width="670" height="26" rx="8" fill="#426c2a"/><text x="380" y="214" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">VM runs on hypervisor and physical server</text>
+          </svg>
+          <figcaption>The VM and the containers solve different parts of the deployment problem.</figcaption>
+        </figure>
+        <div class="callout"><p><strong>Takeaway:</strong> VMs and containers complement each other. Choose the boundary and operating system the workload needs, then choose how to package and operate the application.</p></div>
+        <p class="source">Sources: <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/about/containers-vs-vm" target="_blank" rel="noopener noreferrer">Microsoft Learn · Containers hosted in VMs</a> · <a href="https://www.atlassian.com/microservices/cloud-computing/containers-vs-vms" target="_blank" rel="noopener noreferrer">Atlassian · Using both together</a> · <a href="https://contabo.com/blog/containers-vs-virtual-machines/" target="_blank" rel="noopener noreferrer">Contabo · Comparison</a></p>
+      </section>
+      <section class="module-intro topic-four" id="topic-4">
+        <p class="eyebrow">Docker foundations · Topic 04</p>
+        <h2>Set up Docker</h2>
+        <p>Choose the right Docker installation for your machine, prepare an Ubuntu lab, install Docker Engine from Docker's repository, and verify that a container runs.</p>
+      </section>
+
+      <section class="topic setup-choice" id="setup-choose">
+        <p class="kicker">Slide 01 · Teal · Choose a setup</p>
+        <h2>Docker Engine or Docker Desktop?</h2>
+        <div class="grid"><div class="mini"><span class="mini-label">UBUNTU SERVER OR VPS</span><h3>Docker Engine</h3><p>Install the engine, command-line tools, and plugins on a supported Linux host. A graphical desktop is not required.</p></div><div class="mini"><span class="mini-label">DEVELOPER WORKSTATION</span><h3>Docker Desktop</h3><p>A desktop application with a graphical interface and an included engine. On Linux, Docker Desktop runs its own VM.</p></div></div>
+        <figure class="diagram"><svg viewBox="0 0 760 200" role="img" aria-labelledby="setup-path-title setup-path-desc" xmlns="http://www.w3.org/2000/svg"><title id="setup-path-title">Choose a Docker installation path</title><desc id="setup-path-desc">A server or VPS can use Docker Engine directly on Linux; a Linux workstation can use Docker Desktop, which runs a virtual machine containing the Docker engine.</desc><rect x="25" y="20" width="335" height="155" rx="16" fill="#fff" stroke="#61b4a9" stroke-width="3"/><rect x="400" y="20" width="335" height="155" rx="16" fill="#fff" stroke="#61b4a9" stroke-width="3"/><g text-anchor="middle" fill="#075e5e" font-weight="700"><text x="192" y="49" font-size="18">Ubuntu server / VPS</text><text x="567" y="49" font-size="18">Linux workstation</text></g><rect x="58" y="66" width="270" height="34" rx="8" fill="#b4e9e0"/><rect x="433" y="66" width="270" height="34" rx="8" fill="#b4e9e0"/><rect x="58" y="111" width="270" height="34" rx="8" fill="#007c7b"/><rect x="433" y="111" width="270" height="34" rx="8" fill="#007c7b"/><g text-anchor="middle" font-size="14" font-weight="700"><text x="193" y="89" fill="#075e5e">Docker Engine + CLI</text><text x="568" y="89" fill="#075e5e">Docker Desktop interface</text><text x="193" y="134" fill="#fff">Linux host</text><text x="568" y="134" fill="#fff">Desktop VM + Engine</text></g></svg><figcaption>The Ubuntu Engine steps below target a Linux host. Desktop uses its own installation instructions.</figcaption></figure>
+        <p class="source">References: <a href="https://docs.docker.com/engine/install/" target="_blank" rel="noopener noreferrer">Docker Engine installation</a> · <a href="https://docs.docker.com/desktop/setup/install/linux/" target="_blank" rel="noopener noreferrer">Docker Desktop on Linux</a></p>
+      </section>
+
+      <section class="topic setup-prepare" id="setup-prepare">
+        <p class="kicker">Slide 02 · Clay · Prepare</p>
+        <h2>Prepare an Ubuntu machine</h2>
+        <p>Use a supported 64-bit Ubuntu release and CPU architecture with internet access and a user who can run <code>sudo</code>. The commands below are for Ubuntu with systemd and APT. On a remote VPS, connect over SSH first. Check Docker's current supported versions before starting.</p>
+        <div class="codebox"><div class="code-label">UBUNTU TERMINAL · INSPECT THE SYSTEM</div><pre><code>cat /etc/os-release
+dpkg --print-architecture
+command -v docker
+dpkg-query -W docker.io docker-compose docker-compose-v2 docker-doc docker-buildx podman-docker containerd runc 2&gt;/dev/null</code></pre></div>
+        <p>The last commands help identify existing installations; no output for an absent package is expected. Docker lists <code>docker.io</code>, standalone Compose packages, <code>podman-docker</code>, <code>containerd</code>, and <code>runc</code> among possible conflicts with its official packages.</p>
+        <div class="callout"><p><strong>Existing server:</strong> review the <a href="https://docs.docker.com/engine/install/ubuntu/#uninstall-old-versions" target="_blank" rel="noopener noreferrer">conflicting packages guidance</a> and the services that depend on them before removal. Removing shared runtimes can disrupt existing workloads. Use a fresh lab if unsure.</p></div>
+        <p class="source">References: <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener noreferrer">Docker · Ubuntu prerequisites</a> · <a href="https://www.hostinger.com/tutorials/how-to-install-docker-on-ubuntu/" target="_blank" rel="noopener noreferrer">Hostinger · Ubuntu setup</a></p>
+      </section>
+
+      <section class="topic setup-repo" id="setup-repository">
+        <p class="kicker">Slide 03 · Violet · Repository</p>
+        <h2>Add Docker's APT repository</h2>
+        <p>Run these in a <strong>Bash shell on a supported Ubuntu system</strong>. APT uses Docker's signing key to verify packages from the configured repository. Review the file if an existing Docker repository is already configured.</p>
+        <div class="codebox"><div class="code-label">UBUNTU · INSTALL PREREQUISITES AND ADD THE KEY</div><pre><code>sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc</code></pre></div>
+        <div class="codebox"><div class="code-label">UBUNTU · ADD THE SOURCE AND REFRESH THE PACKAGE LIST</div><pre><code>sudo tee /etc/apt/sources.list.d/docker.sources &lt;&lt;EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release &amp;&amp; echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+sudo apt update</code></pre></div>
+        <p>The <code>Suites</code> and <code>Architectures</code> values are filled in from the machine. Enter <code>EOF</code> on its own line when copying the block.</p>
+        <p class="source">References: <a href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-apt-repository" target="_blank" rel="noopener noreferrer">Docker · Install using the APT repository</a> · <a href="https://www.datacamp.com/tutorial/install-docker-on-ubuntu" target="_blank" rel="noopener noreferrer">DataCamp · Ubuntu tutorial</a></p>
+      </section>
+
+      <section class="topic setup-install" id="setup-packages">
+        <p class="kicker">Slide 04 · Blue · Install</p>
+        <h2>Install Docker Engine and tools</h2>
+        <p>Install the Engine, command-line interface, runtime, Buildx, and Compose plugin from Docker's repository.</p>
+        <div class="codebox"><div class="code-label">UBUNTU · INSTALL PACKAGES</div><pre><code>apt-cache policy docker-ce
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</code></pre></div>
+        <div class="grid three"><div class="mini"><span class="mini-label">ENGINE + CLI</span><p>The daemon manages containers; the CLI sends commands to it.</p></div><div class="mini"><span class="mini-label">CONTAINERD</span><p>The runtime component helps manage container execution.</p></div><div class="mini"><span class="mini-label">PLUGINS</span><p>Buildx supports builds; Compose defines multi-container applications.</p></div></div>
+        <p>APT shows the proposed packages and asks for confirmation. Read the changes before accepting, especially on an existing server.</p>
+        <p class="source">Reference: <a href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-apt-repository" target="_blank" rel="noopener noreferrer">Docker · Ubuntu installation</a></p>
+      </section>
+
+      <section class="topic setup-verify" id="setup-verify">
+        <p class="kicker">Slide 05 · Green · Verify</p>
+        <h2>Check the service and run a container</h2>
+        <p>The service normally starts automatically after installation on Ubuntu. Check its status; if it is inactive, start it and check again. Press <code>q</code> to leave the status view if a pager opens.</p>
+        <div class="codebox"><div class="code-label">UBUNTU · SERVICE AND VERSION CHECKS</div><pre><code>sudo systemctl status docker
+# Only if the service is inactive:
+sudo systemctl start docker
+docker --version
+sudo docker version
+docker compose version</code></pre></div>
+        <p><code>docker --version</code> confirms the CLI is installed. <code>sudo docker version</code> also checks whether the client can reach the daemon; look for both Client and Server sections.</p>
+        <div class="codebox"><div class="code-label">UBUNTU · RUN THE OFFICIAL TEST IMAGE</div><pre><code>sudo docker run --rm hello-world</code></pre></div>
+        <p>Docker downloads the image if needed, starts a short-lived container, prints a confirmation, and removes the container after it exits. An image download requires network access; the image remains available locally.</p>
+        <p class="source">Reference: <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener noreferrer">Docker · Verify installation</a></p>
+      </section>
+
+      <section class="topic setup-access" id="setup-permissions">
+        <p class="kicker">Slide 06 · Rose · Access</p>
+        <h2>Decide how to run Docker commands</h2>
+        <p>By default, the Linux Docker daemon runs as root and access to its socket requires elevated privileges. The examples above use <code>sudo</code>.</p>
+        <div class="callout"><p><strong>Docker group access is powerful:</strong> membership grants root-level privileges through the daemon. Add only trusted users; Docker's <a href="https://docs.docker.com/engine/security/rootless/" target="_blank" rel="noopener noreferrer">rootless mode</a> is a separate option.</p></div>
+        <p>If this is your own lab machine and you deliberately want to use Docker without <code>sudo</code>, first check that the <code>docker</code> group exists, then add your user:</p>
+        <div class="codebox"><div class="code-label">OPTIONAL · TRUSTED LAB USER</div><pre><code>getent group docker
+# If the preceding command returns nothing:
+sudo groupadd docker
+sudo usermod -aG docker "$USER"</code></pre></div>
+        <p>Log out and back in to refresh group membership, then run <code>docker run --rm hello-world</code> without <code>sudo</code>. On a VM, a restart may be needed. This changes the user's privileges for the machine.</p>
+        <p class="source">Reference: <a href="https://docs.docker.com/engine/install/linux-postinstall/" target="_blank" rel="noopener noreferrer">Docker · Linux post-installation</a></p>
+      </section>
+
+      <section class="topic setup-desktop" id="setup-desktop">
+        <p class="kicker">Slide 07 · Gold · Desktop</p>
+        <h2>Use Docker Desktop on Linux</h2>
+        <p>Docker Desktop is a separate installation for supported Linux desktops. It provides a graphical interface and runs its own VM, so check Docker's current distribution, architecture, desktop environment, KVM, memory, and virtualization requirements first.</p>
+        <ol class="steps"><li>Review <a href="https://docs.docker.com/desktop/setup/install/linux/" target="_blank" rel="noopener noreferrer">Docker Desktop's Linux requirements</a> and select the guide for your distribution.</li><li>Follow the distribution-specific package installation instructions and start Docker Desktop.</li><li>Accept the terms when prompted and wait for the engine to start.</li><li>Check <code>docker context ls</code> and <code>docker version</code> to confirm which engine the CLI targets.</li></ol>
+        <div class="callout"><p>Desktop and a separately installed Engine can use different contexts, images, and containers. Running both may cause port conflicts. On Linux, Desktop normally uses the <code>desktop-linux</code> context while it is running.</p></div>
+        <p>For Windows and macOS, follow Docker's own <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener noreferrer">Windows</a> or <a href="https://docs.docker.com/desktop/setup/install/mac-install/" target="_blank" rel="noopener noreferrer">Mac</a> guide; the Ubuntu APT commands above do not apply.</p>
+        <p class="source">References: <a href="https://docs.docker.com/desktop/setup/install/linux/" target="_blank" rel="noopener noreferrer">Docker Desktop · Linux</a> · <a href="https://medium.com/@digvijaygaur96/a-comprehensive-guide-to-docker-setup-and-deployment-b213afa890b8" target="_blank" rel="noopener noreferrer">Docker setup overview</a></p>
+      </section>
+
+      <section class="topic setup-trouble" id="setup-troubleshoot">
+        <p class="kicker">Slide 08 · Indigo · Troubleshoot</p>
+        <h2>If the installation does not work</h2>
+        <div class="table-scroll"><table><thead><tr><th>Symptom</th><th>What to check</th></tr></thead><tbody><tr><td><code>docker: command not found</code></td><td>Confirm the CLI package installed successfully and open a new shell if needed.</td></tr><tr><td>Cannot connect to daemon</td><td>Check <code>sudo systemctl status docker</code>, the active context, and whether the appropriate Engine is running.</td></tr><tr><td>Permission denied on socket</td><td>Use <code>sudo</code> or review the optional access setup and refresh your login session.</td></tr><tr><td>Image download fails</td><td>Check DNS, internet access, proxy settings, and registry connectivity.</td></tr><tr><td>Package unavailable</td><td>Check Ubuntu release, architecture, repository source, and <code>sudo apt update</code> output.</td></tr></tbody></table></div>
+        <p>To update packages later, refresh APT and review available Docker upgrades according to your organization's change process. Docker's <a href="https://docs.docker.com/engine/install/ubuntu/#upgrade-docker-engine" target="_blank" rel="noopener noreferrer">Ubuntu upgrade guide</a> also describes selecting a specific version.</p>
+        <div class="callout"><p>Docker-published ports can interact differently with host firewall rules. Review <a href="https://docs.docker.com/engine/network/packet-filtering-firewalls/" target="_blank" rel="noopener noreferrer">Docker's firewall documentation</a> before exposing services on a server.</p></div>
+        <p class="source">References: <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener noreferrer">Docker · Ubuntu setup</a> · <a href="https://www.hostinger.com/tutorials/how-to-install-docker-on-ubuntu/" target="_blank" rel="noopener noreferrer">Hostinger · Troubleshooting</a> · <a href="https://www.datacamp.com/tutorial/install-docker-on-ubuntu" target="_blank" rel="noopener noreferrer">DataCamp · Install Docker</a></p>
+      </section>
+      <section class="module-intro topic-five" id="topic-5">
+        <p class="eyebrow">Docker foundations · Topic 05</p>
+        <h2>Your first container on Windows 11</h2>
+        <p>Docker Desktop is already installed. Start it, verify the connection, run a small test image, and then launch a web server you can view in your browser.</p>
+      </section>
+
+      <section class="topic win-ready" id="win-ready">
+        <p class="kicker">Slide 01 · Blue · Get ready</p><h2>Start Docker Desktop</h2>
+        <ol class="steps"><li>Open <strong>Docker Desktop</strong> from the Windows Start menu. If prompted, review and accept the terms, then wait until Docker Desktop shows that the engine is running.</li><li>Open <strong>PowerShell</strong> or Windows Terminal. The commands in this lesson work in PowerShell; you do not need to open it as administrator for a normal Desktop setup.</li><li>Make sure Docker Desktop is using <strong>Linux containers</strong>. If Windows containers are enabled, use the Docker Desktop menu to switch to Linux containers; this example uses Linux images.</li></ol>
+        <div class="codebox"><div class="code-label">POWERSHELL · CHECK THE INSTALLATION</div><pre><code>docker --version
+docker version</code></pre></div>
+        <p><code>docker --version</code> shows the installed command-line version. <code>docker version</code> should show both <strong>Client</strong> and <strong>Server</strong> details when the engine is reachable; check that the server reports Linux.</p>
+        <p class="source">Reference: <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener noreferrer">Docker · Start Desktop on Windows</a></p>
+      </section>
+
+      <section class="topic win-hello" id="win-hello">
+        <p class="kicker">Slide 02 · Teal · First container</p><h2>Run hello-world</h2>
+        <p>Enter the following command in PowerShell:</p>
+        <div class="codebox"><div class="code-label">POWERSHELL · RUN THE TEST</div><pre><code>docker run hello-world</code></pre></div>
+        <p>Docker checks for the image locally and downloads it if necessary. It creates and starts a container, which prints a message beginning <strong>“Hello from Docker!”</strong> and then exits. The first download requires internet access.</p>
+        <figure class="diagram"><svg viewBox="0 0 760 180" role="img" aria-labelledby="hello-title hello-desc" xmlns="http://www.w3.org/2000/svg"><title id="hello-title">How hello-world runs</title><desc id="hello-desc">PowerShell sends a run command to Docker Desktop; Docker downloads the image if needed, creates a container, and returns a success message.</desc><g fill="#fff" stroke="#70bcb1" stroke-width="3"><rect x="20" y="38" width="160" height="90" rx="12"/><rect x="213" y="38" width="160" height="90" rx="12"/><rect x="406" y="38" width="160" height="90" rx="12"/><rect x="599" y="38" width="140" height="90" rx="12"/></g><g text-anchor="middle" fill="#075f57" font-size="15" font-weight="700"><text x="100" y="75">PowerShell</text><text x="100" y="101" font-size="12">docker run</text><text x="293" y="75">Docker Desktop</text><text x="293" y="101" font-size="12">checks image</text><text x="486" y="75">Container</text><text x="486" y="101" font-size="12">starts and exits</text><text x="669" y="75">Message</text><text x="669" y="101" font-size="12">Hello from Docker!</text></g><g stroke="#087b70" stroke-width="3"><path d="M181 83h29"/><path d="M374 83h29"/><path d="M567 83h29"/></g></svg><figcaption>The hello-world container does one job, prints its message, and stops.</figcaption></figure>
+        <div class="codebox"><div class="code-label">POWERSHELL · SHOW RUNNING AND STOPPED CONTAINERS</div><pre><code>docker ps
+docker ps -a</code></pre></div>
+        <p><code>docker ps</code> shows running containers; <code>docker ps -a</code> also includes stopped containers, including the one just created. Its generated name will be different on each run.</p>
+        <p class="source">Reference: <a href="https://docs.docker.com/engine/install/ubuntu/" target="_blank" rel="noopener noreferrer">Docker · Verify with hello-world</a></p>
+      </section>
+
+      <section class="topic win-web" id="win-web">
+        <p class="kicker">Slide 03 · Orange · Try a web server</p><h2>Run Nginx and open it in your browser</h2>
+        <p>This second example starts an Nginx web server in the background. It maps port <code>8080</code> on your laptop to port <code>80</code> inside the container, using a loopback address for local access.</p>
+        <div class="codebox"><div class="code-label">POWERSHELL · START NGINX</div><pre><code>docker run -d --name class-web -p 127.0.0.1:8080:80 nginx:alpine</code></pre></div>
+        <div class="grid three"><div class="mini"><span class="mini-label">-d</span><p>Runs the container in the background.</p></div><div class="mini"><span class="mini-label">--name class-web</span><p>Gives this container a memorable name.</p></div><div class="mini"><span class="mini-label">-p 127.0.0.1:8080:80</span><p>Maps local host port 8080 to container port 80.</p></div></div>
+        <p>Docker prints a container ID. Open <a href="http://127.0.0.1:8080" target="_blank" rel="noopener noreferrer">http://127.0.0.1:8080</a>; you should see the Nginx welcome page.</p>
+        <figure class="diagram"><svg viewBox="0 0 760 180" role="img" aria-labelledby="winweb-title winweb-desc" xmlns="http://www.w3.org/2000/svg"><title id="winweb-title">Browser connects to an Nginx container</title><desc id="winweb-desc">The browser connects to localhost port 8080, which Docker maps to Nginx on port 80 in the container.</desc><rect x="25" y="36" width="185" height="96" rx="13" fill="#fff" stroke="#d58e67" stroke-width="3"/><text x="117" y="74" text-anchor="middle" fill="#8b401b" font-size="17" font-weight="700">Browser</text><text x="117" y="102" text-anchor="middle" fill="#8b401b" font-size="13">127.0.0.1:8080</text><path d="M220 84H395" stroke="#b65825" stroke-width="4" marker-end="url(#winweb-arrow)"/><text x="308" y="68" text-anchor="middle" fill="#8b401b" font-size="13" font-weight="700">Docker port mapping</text><rect x="410" y="36" width="325" height="96" rx="13" fill="#fff" stroke="#d58e67" stroke-width="3"/><text x="572" y="74" text-anchor="middle" fill="#8b401b" font-size="17" font-weight="700">class-web container</text><text x="572" y="102" text-anchor="middle" fill="#8b401b" font-size="13">Nginx listens on port 80</text><defs><marker id="winweb-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#b65825"/></marker></defs></svg><figcaption>The two port numbers refer to different sides of the connection.</figcaption></figure>
+        <p class="source">Reference: <a href="https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/" target="_blank" rel="noopener noreferrer">Docker · Publishing ports</a></p>
+      </section>
+
+      <section class="topic win-manage" id="win-manage">
+        <p class="kicker">Slide 04 · Purple · Inspect and clean up</p><h2>See what is running</h2>
+        <div class="codebox"><div class="code-label">POWERSHELL · INSPECT THE EXAMPLE</div><pre><code>docker ps
+docker logs class-web
+docker images</code></pre></div>
+        <p>Look for <code>class-web</code> and its port mapping in <code>docker ps</code>. Docker Desktop's <strong>Containers</strong> view also shows running and stopped containers.</p>
+        <div class="codebox"><div class="code-label">POWERSHELL · WHEN THE DEMONSTRATION IS FINISHED</div><pre><code>docker stop class-web
+docker rm class-web</code></pre></div>
+        <p>Stopping ends the web server; removing deletes that container. The downloaded <code>nginx:alpine</code> image remains, so a later run can reuse it. The earlier <code>hello-world</code> container remains stopped; find its generated name with <code>docker ps -a</code> and remove that specific name with <code>docker rm &lt;name&gt;</code> if desired.</p>
+      </section>
+
+      <section class="topic win-help" id="win-help">
+        <p class="kicker">Slide 05 · Green · Troubleshooting</p><h2>If something does not work</h2>
+        <div class="table-scroll"><table><thead><tr><th>What you see</th><th>What to try</th></tr></thead><tbody><tr><td><code>docker</code> is not recognized</td><td>Confirm Desktop installed successfully, then open a new PowerShell window.</td></tr><tr><td>Cannot connect to Docker</td><td>Start Docker Desktop, wait for the engine, then run <code>docker version</code> again.</td></tr><tr><td>Image or platform mismatch</td><td>Switch Docker Desktop to Linux containers and check the server information in <code>docker version</code>.</td></tr><tr><td>Port 8080 is already in use</td><td>Choose another host port, for example <code>-p 127.0.0.1:8081:80</code>, and open <code>http://127.0.0.1:8081</code>.</td></tr><tr><td>Container name already in use</td><td>Inspect <code>docker ps -a</code>; choose a different name or remove your earlier stopped demonstration container.</td></tr><tr><td>Image cannot download</td><td>Check internet, DNS, proxy, and access to Docker Hub.</td></tr></tbody></table></div>
+        <p class="source">References: <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener noreferrer">Docker Desktop · Windows</a> · <a href="https://docs.docker.com/learn/content/run-your-first-container/" target="_blank" rel="noopener noreferrer">Docker Learn · Run your first container</a></p>
+      </section>
+      <footer class="finish">End of Topic 05 · <a href="#course-topics">Back to topics list</a> · <a href="index.html">All courses</a></footer>
     </main>
   </div>
 </body>
 </html>
+
+
