@@ -3,20 +3,273 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f9fd">
-  <meta name="description" content="Docker course content will be added later.">
-  <title>Docker — Course</title>
+  <meta name="theme-color" content="#f5f8fc">
+  <meta name="description" content="Docker foundations: servers, data centers, virtual machines, Linux processes, services, namespaces, and cgroups.">
+  <title>Docker Foundations — Servers, Processes &amp; Isolation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{color-scheme:light;--bg:#f4f9fd;--ink:#13273a;--muted:#5e7183;--line:#dfe9f1;--accent:#0877c9}
-    *{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}.card{width:min(100%,640px);padding:clamp(24px,6vw,48px);border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:0 12px 32px #13273a10}a{color:var(--accent);font-weight:700}.eyebrow{color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}h1{margin:.4em 0;font-size:clamp(36px,7vw,56px);line-height:1.05;letter-spacing:-.04em}p{color:var(--muted)}
+    :root{color-scheme:light;--bg:#f5f8fc;--ink:#14263b;--muted:#5c6e82;--line:#dfe7f0}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "DM Sans",system-ui,sans-serif}h1,h2,h3,.brand{font-family:"Space Grotesk",system-ui,sans-serif;line-height:1.15}a{color:#135cb0}a:focus-visible{outline:3px solid #135cb0;outline-offset:3px;border-radius:3px}.skip{position:absolute;top:-60px;left:12px;padding:9px 14px;background:#fff;z-index:5}.skip:focus{top:12px}
+    .topbar{min-height:70px;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;font-weight:700;letter-spacing:.02em}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#e8f4ff;color:#0877c9;font-size:20px}.brand small{display:block;color:var(--muted);font:11px "DM Sans",sans-serif;letter-spacing:.08em}.topbar nav{display:flex;gap:18px;font-size:13px;font-weight:700}.topbar nav a{text-decoration:none}
+    .shell{max-width:1440px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--line);min-height:calc(100vh - 70px);padding:28px 14px 32px}.sidebar-label{padding:0 12px;color:#91a0ae;font-size:11px;font-weight:800;letter-spacing:.12em}.sidebar nav{display:grid;gap:5px}.sidebar a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#4d6074;text-decoration:none;font-size:13px;font-weight:700}.sidebar a:hover,.sidebar a:focus-visible{background:#f2f6fa}.nav-dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--dot)}
+    main{min-width:0;padding:44px clamp(20px,5vw,72px) 78px}.intro{max-width:960px;margin-bottom:32px}.eyebrow{margin:0 0 11px;color:#0877c9;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em}.lead{max-width:780px;color:var(--muted);font-size:clamp(18px,2vw,22px);margin:0 0 20px}.path{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#45627c;font-size:13px;font-weight:700}.path span{padding:6px 10px;border-radius:999px;background:#e8f4ff}.path b{color:#8aa1b5}
+    .topic{--accent:#1d4ed8;--tint:#eef4ff;max-width:1000px;margin:0 0 25px;padding:clamp(22px,3vw,34px);background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:18px;box-shadow:0 8px 25px #14263b08;scroll-margin-top:18px}.topic.data-center{--accent:#0f766e;--tint:#e8f8f4}.topic.vm{--accent:#7041b5;--tint:#f2ecfc}.topic.types{--accent:#bc5d16;--tint:#fff2e5}.topic.works{--accent:#087aaf;--tint:#e8f7fd}.topic.tradeoffs{--accent:#537a20;--tint:#f1f7e7}.kicker{display:inline-block;margin:0 0 10px;padding:5px 10px;border-radius:999px;background:var(--tint);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.topic h2{margin:0 0 14px;font-size:clamp(28px,3vw,38px);letter-spacing:-.035em}.topic h3{font-size:19px;margin:0 0 8px}.topic p{max-width:900px;margin:0 0 16px}.topic p:last-child{margin-bottom:0}.topic strong{color:var(--ink)}.topic code{padding:2px 5px;border-radius:4px;background:var(--tint);color:var(--accent);font-size:.9em}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:19px 0}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.mini{padding:18px;border:1px solid var(--line);border-radius:13px;background:#fcfdff}.mini p{margin:0;color:var(--muted);font-size:14px}.mini-label{display:block;margin-bottom:8px;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.11em}.callout{padding:15px 18px;margin:18px 0;background:var(--tint);border-left:4px solid var(--accent);border-radius:0 11px 11px 0}.callout p{margin:0}.diagram{overflow-x:auto;margin:23px 0;padding:15px;border:1px solid var(--line);border-radius:15px;background:var(--tint)}.diagram svg{display:block;width:100%;min-width:620px;height:auto}.diagram figcaption{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}.steps{counter-reset:step;list-style:none;padding:0;margin:19px 0;display:grid;gap:10px}.steps li{position:relative;padding:12px 14px 12px 51px;border:1px solid var(--line);border-radius:11px;background:#fcfdff}.steps li:before{counter-increment:step;content:counter(step);position:absolute;left:13px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:var(--tint);color:var(--accent);font-size:12px;font-weight:800}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}.list-card{padding:19px;border-radius:14px;border:1px solid var(--line);background:#fcfdff}.list-card.good{border-top:4px solid #23804a}.list-card.caution{border-top:4px solid #b84c44}.list-card ul{margin:10px 0 0;padding-left:21px}.list-card li{margin:8px 0}.source{margin-top:19px!important;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.source a{font-weight:700}.finish{max-width:1000px;padding:14px 4px;color:var(--muted);font-size:13px}
+    .sidebar-label:not(:first-child){margin-top:24px}.module-intro{max-width:1000px;margin:50px 0 26px;padding:28px 30px;border-radius:18px;background:#14263b;color:#fff;scroll-margin-top:18px}.module-intro .eyebrow{color:#86d3ff}.module-intro h2{font-size:clamp(30px,4vw,48px);letter-spacing:-.04em;margin:0 0 12px}.module-intro p:last-child{margin:0;color:#cedceb;max-width:790px}.topic.process{--accent:#a64d09;--tint:#fff2e6}.topic.daemon{--accent:#ae2253;--tint:#fff0f5}.topic.service{--accent:#4f46ad;--tint:#f1f0ff}.topic.namespace{--accent:#0e7490;--tint:#e8f8fd}.topic.cgroups{--accent:#7e35a5;--tint:#f8edff}.topic.connection{--accent:#24733f;--tint:#eaf8ef}.codebox{margin:16px 0 20px;overflow:hidden;border-radius:12px;background:#17283d;color:#eaf4ff}.codebox pre{margin:0;padding:15px 18px;overflow-x:auto;font:13px/1.6 Consolas,"Courier New",monospace}.code-label{padding:7px 16px;background:#25415e;color:#c7d9e9;font-size:10px;font-weight:800;letter-spacing:.08em}.topic table{width:100%;border-collapse:collapse;font-size:14px}.topic th,.topic td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.topic th{background:var(--tint)}.table-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:12px}.topic tr:last-child td{border-bottom:0}
+    @media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:3;min-height:0;padding:7px 10px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.sidebar-label{display:none}.sidebar nav{display:flex;gap:4px;width:max-content}.sidebar a{white-space:nowrap;padding:8px 10px}main{padding:30px 19px 60px}}
+    @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col{grid-template-columns:1fr}.topic{padding:20px 18px}.path{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
 </head>
 <body>
-  <main class="card">
-    <p class="eyebrow">Course library · Docker</p>
-    <h1>Docker</h1>
-    <p>Course content will be added later.</p>
-    <a href="index.html">← Back to all courses</a>
-  </main>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 01–02</small></span></a>
+    <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#topic-2">Topic 2</a></nav>
+  </header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Course topic navigation">
+      <p class="sidebar-label">TOPIC 01 · SECTIONS</p>
+      <nav>
+        <a href="#overview" style="--dot:#0877c9"><span class="nav-dot"></span>Overview</a>
+        <a href="#server" style="--dot:#1d4ed8"><span class="nav-dot"></span>What is a server?</a>
+        <a href="#data-center" style="--dot:#0f766e"><span class="nav-dot"></span>What is a data center?</a>
+        <a href="#vm" style="--dot:#7041b5"><span class="nav-dot"></span>What is a VM?</a>
+        <a href="#vm-types" style="--dot:#bc5d16"><span class="nav-dot"></span>VM types</a>
+        <a href="#how-vm-works" style="--dot:#087aaf"><span class="nav-dot"></span>How a VM works</a>
+        <a href="#pros-cons" style="--dot:#537a20"><span class="nav-dot"></span>VM pros &amp; cons</a>
+      </nav>
+      <p class="sidebar-label">TOPIC 02 · LINUX FOUNDATIONS</p>
+      <nav>
+        <a href="#topic-2" style="--dot:#14263b"><span class="nav-dot"></span>Topic 2 overview</a>
+        <a href="#linux-process" style="--dot:#a64d09"><span class="nav-dot"></span>Linux process</a>
+        <a href="#daemon" style="--dot:#ae2253"><span class="nav-dot"></span>Daemon</a>
+        <a href="#service" style="--dot:#4f46ad"><span class="nav-dot"></span>Service &amp; systemd</a>
+        <a href="#namespaces" style="--dot:#0e7490"><span class="nav-dot"></span>Namespaces</a>
+        <a href="#cgroups" style="--dot:#7e35a5"><span class="nav-dot"></span>cgroups</a>
+        <a href="#linux-to-docker" style="--dot:#24733f"><span class="nav-dot"></span>Linux to Docker</a>
+      </nav>
+    </aside>
+    <main id="main">
+      <section class="intro" id="overview">
+        <p class="eyebrow">Docker foundations · Topic 01</p>
+        <h1>Servers, data centers<br>&amp; virtual machines</h1>
+        <p class="lead">Before containers make sense, picture the computers that run them. Follow the path from a physical server, to a data center, to virtual machines sharing one host.</p>
+        <div class="path" aria-label="Lesson path"><span>Server</span><b aria-hidden="true">→</b><span>Data center</span><b aria-hidden="true">→</b><span>Virtual machine</span></div>
+      </section>
+
+      <section class="topic server" id="server">
+        <p class="kicker">01 · Blue · Server</p>
+        <h2>What is a server?</h2>
+        <p>A <strong>server</strong> provides a service to another computer or program, called a <strong>client</strong>. The word can mean the software providing the service or the computer running that software. A server may be a physical machine or a virtual machine.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 190" role="img" aria-labelledby="server-title server-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="server-title">Client and server request and response</title><desc id="server-desc">A browser sends a request across a network to a web server. The server returns a web page.</desc>
+            <rect x="35" y="37" width="190" height="105" rx="16" fill="#fff" stroke="#8fb3ed" stroke-width="3"/><rect x="74" y="55" width="110" height="62" rx="6" fill="#dbeafe" stroke="#1d4ed8" stroke-width="3"/><rect x="93" y="117" width="72" height="7" rx="3" fill="#1d4ed8"/><text x="130" y="161" text-anchor="middle" fill="#173b82" font-size="16" font-weight="700">Client · browser</text>
+            <path d="M250 72 H495" fill="none" stroke="#1d4ed8" stroke-width="4" marker-end="url(#arrow-blue)"/><text x="374" y="62" text-anchor="middle" fill="#173b82" font-size="14" font-weight="700">Request: GET page</text>
+            <path d="M505 113 H260" fill="none" stroke="#37a4d8" stroke-width="4" marker-end="url(#arrow-cyan)"/><text x="376" y="138" text-anchor="middle" fill="#176085" font-size="14" font-weight="700">Response: page data</text>
+            <rect x="535" y="28" width="190" height="123" rx="16" fill="#fff" stroke="#8fb3ed" stroke-width="3"/><rect x="574" y="47" width="112" height="20" rx="5" fill="#1d4ed8"/><rect x="574" y="77" width="112" height="20" rx="5" fill="#3977d6"/><circle cx="585" cy="57" r="3" fill="#fff"/><circle cx="585" cy="87" r="3" fill="#fff"/><text x="630" y="171" text-anchor="middle" fill="#173b82" font-size="16" font-weight="700">Web server</text>
+            <defs><marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#1d4ed8"/></marker><marker id="arrow-cyan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#37a4d8"/></marker></defs>
+          </svg>
+          <figcaption>A browser is a client; the machine or software answering it is a server.</figcaption>
+        </figure>
+        <div class="grid three"><div class="mini"><span class="mini-label">WEB SERVER</span><p>Delivers websites and APIs.</p></div><div class="mini"><span class="mini-label">FILE SERVER</span><p>Shares files with other devices.</p></div><div class="mini"><span class="mini-label">DATABASE SERVER</span><p>Stores data and responds to queries.</p></div></div>
+        <p class="source">Reference: <a href="https://www.ibm.com/think/topics/data-centers" target="_blank" rel="noopener noreferrer">IBM · Data center infrastructure</a></p>
+      </section>
+
+      <section class="topic data-center" id="data-center">
+        <p class="kicker">02 · Teal · Data center</p>
+        <h2>What is a data center?</h2>
+        <p>A <strong>data center</strong> is a physical facility that houses computing equipment. It brings servers together with networking, storage, power, cooling, and physical security so applications can keep running.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 240" role="img" aria-labelledby="dc-title dc-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="dc-title">Data center equipment and supporting systems</title><desc id="dc-desc">Three server racks connect to a network, with storage, power, cooling, and security supporting the facility.</desc>
+            <rect x="22" y="16" width="716" height="205" rx="18" fill="#fff" stroke="#8acbc0" stroke-width="3"/>
+            <g fill="#d2f2ec" stroke="#0f766e" stroke-width="3"><rect x="59" y="39" width="119" height="107" rx="8"/><rect x="217" y="39" width="119" height="107" rx="8"/><rect x="375" y="39" width="119" height="107" rx="8"/></g>
+            <g fill="#0f766e"><rect x="73" y="57" width="91" height="16" rx="4"/><rect x="73" y="83" width="91" height="16" rx="4"/><rect x="73" y="109" width="91" height="16" rx="4"/><rect x="231" y="57" width="91" height="16" rx="4"/><rect x="231" y="83" width="91" height="16" rx="4"/><rect x="231" y="109" width="91" height="16" rx="4"/><rect x="389" y="57" width="91" height="16" rx="4"/><rect x="389" y="83" width="91" height="16" rx="4"/><rect x="389" y="109" width="91" height="16" rx="4"/></g>
+            <text x="118" y="169" text-anchor="middle" fill="#0b5d56" font-size="14" font-weight="700">Rack 1</text><text x="276" y="169" text-anchor="middle" fill="#0b5d56" font-size="14" font-weight="700">Rack 2</text><text x="434" y="169" text-anchor="middle" fill="#0b5d56" font-size="14" font-weight="700">Rack 3</text>
+            <rect x="548" y="41" width="148" height="44" rx="9" fill="#0f766e"/><text x="622" y="69" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Network</text><rect x="548" y="99" width="148" height="44" rx="9" fill="#248e82"/><text x="622" y="127" text-anchor="middle" fill="#fff" font-size="15" font-weight="700">Storage</text>
+            <path d="M494 90 H537" stroke="#0f766e" stroke-width="4" marker-end="url(#arrow-teal)"/><rect x="188" y="187" width="136" height="22" rx="8" fill="#e2f5f1"/><text x="256" y="203" text-anchor="middle" fill="#0b5d56" font-size="13" font-weight="700">Power</text><rect x="332" y="187" width="136" height="22" rx="8" fill="#e2f5f1"/><text x="400" y="203" text-anchor="middle" fill="#0b5d56" font-size="13" font-weight="700">Cooling</text><rect x="476" y="187" width="136" height="22" rx="8" fill="#e2f5f1"/><text x="544" y="203" text-anchor="middle" fill="#0b5d56" font-size="13" font-weight="700">Security</text>
+            <defs><marker id="arrow-teal" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#0f766e"/></marker></defs>
+          </svg>
+          <figcaption>Servers are only one part of a working data center.</figcaption>
+        </figure>
+        <div class="callout"><p><strong>Cloud connection:</strong> Cloud providers operate data centers and let customers rent computing resources without owning the building or physical servers.</p></div>
+        <p class="source">Reference: <a href="https://www.ibm.com/think/topics/data-centers" target="_blank" rel="noopener noreferrer">IBM · What is a data center?</a></p>
+      </section>
+
+      <section class="topic vm" id="vm">
+        <p class="kicker">03 · Purple · Virtual machine</p>
+        <h2>What is a virtual machine?</h2>
+        <p>A <strong>virtual machine (VM)</strong> is a software-defined computer. It has virtual CPU, memory, storage, and networking, and normally runs its own operating system, called the <strong>guest OS</strong>. The physical computer beneath it is the <strong>host</strong>.</p>
+        <div class="grid"><div class="mini"><span class="mini-label">PHYSICAL HOST</span><h3>The real hardware</h3><p>Provides the processor, memory, disks, and network connections.</p></div><div class="mini"><span class="mini-label">VIRTUAL MACHINE</span><h3>An independent environment</h3><p>Receives a share of host resources and runs its own OS and applications.</p></div></div>
+        <div class="callout"><p><strong>Example:</strong> One physical server can host a Linux VM for a website and another VM for a database. Each VM behaves like a separate computer, even though both use the same physical machine.</p></div>
+        <p class="source">Reference: <a href="https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine/" target="_blank" rel="noopener noreferrer">Microsoft Azure · What is a virtual machine?</a></p>
+      </section>
+
+      <section class="topic types" id="vm-types">
+        <p class="kicker">04 · Orange · VM types</p>
+        <h2>VM types and hypervisors</h2>
+        <p>The phrase <strong>“VM types”</strong> can describe what the VM is for. A <strong>system VM</strong> runs a complete guest operating system. A <strong>process VM</strong> is a runtime for one program, such as the Java Virtual Machine (JVM). In server and cloud discussions, “VM” usually means a system VM.</p>
+        <div class="grid"><div class="mini"><span class="mini-label">SYSTEM VM</span><h3>A whole virtual computer</h3><p>Has a guest OS; useful for servers, testing another OS, and isolated applications.</p></div><div class="mini"><span class="mini-label">PROCESS VM</span><h3>A runtime for one program</h3><p>Runs a program in a managed environment. It is a different use of the word “virtual machine.”</p></div></div>
+        <p>A <strong>hypervisor</strong> creates and manages system VMs. Hypervisors have two common deployment types:</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 260" role="img" aria-labelledby="types-title types-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="types-title">Type 1 and type 2 hypervisor stacks</title><desc id="types-desc">Type 1 runs the hypervisor directly on hardware. Type 2 runs the hypervisor above a host operating system. Both run guest virtual machines.</desc>
+            <text x="195" y="30" text-anchor="middle" fill="#94440c" font-size="19" font-weight="700">Type 1 · bare metal</text><text x="565" y="30" text-anchor="middle" fill="#94440c" font-size="19" font-weight="700">Type 2 · hosted</text>
+            <g stroke="#d69b6d" stroke-width="2" text-anchor="middle" font-size="14" font-weight="700"><rect x="46" y="50" width="298" height="43" rx="9" fill="#fff"/><text x="195" y="77" fill="#773909">Guest VMs + guest OSs</text><rect x="46" y="101" width="298" height="43" rx="9" fill="#f5b178"/><text x="195" y="128" fill="#522509">Hypervisor</text><rect x="46" y="152" width="298" height="43" rx="9" fill="#b95d19"/><text x="195" y="179" fill="#fff">Physical hardware</text><rect x="416" y="50" width="298" height="37" rx="9" fill="#fff"/><text x="565" y="75" fill="#773909">Guest VMs + guest OSs</text><rect x="416" y="95" width="298" height="37" rx="9" fill="#f5b178"/><text x="565" y="120" fill="#522509">Hypervisor application</text><rect x="416" y="140" width="298" height="37" rx="9" fill="#e8d5c4"/><text x="565" y="165" fill="#522509">Host operating system</text><rect x="416" y="185" width="298" height="37" rx="9" fill="#b95d19"/><text x="565" y="210" fill="#fff">Physical hardware</text></g>
+            <text x="195" y="226" text-anchor="middle" fill="#94440c" font-size="13">Common on servers</text><text x="565" y="246" text-anchor="middle" fill="#94440c" font-size="13">Common on personal computers</text>
+          </svg>
+          <figcaption>Type 1 and Type 2 classify the hypervisor, not the guest VM.</figcaption>
+        </figure>
+        <p class="source">Reference: <a href="https://www.redhat.com/en/topics/virtualization/what-is-a-hypervisor" target="_blank" rel="noopener noreferrer">Red Hat · What is a hypervisor?</a></p>
+      </section>
+
+      <section class="topic works" id="how-vm-works">
+        <p class="kicker">05 · Cyan · How it works</p>
+        <h2>How does a VM work?</h2>
+        <p>The hypervisor sits between physical resources and each guest VM. It presents virtual hardware, schedules use of the real CPU and memory, and keeps the VMs separated.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 280" role="img" aria-labelledby="works-title works-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="works-title">Multiple virtual machines on a physical host</title><desc id="works-desc">Two VMs, each with applications and a guest OS, sit above a hypervisor. The hypervisor allocates virtual CPU, memory, disk, and network from physical hardware.</desc>
+            <rect x="33" y="20" width="320" height="125" rx="14" fill="#fff" stroke="#69bce0" stroke-width="3"/><text x="193" y="45" text-anchor="middle" fill="#075e87" font-size="17" font-weight="700">VM 1 · Linux</text><rect x="57" y="59" width="272" height="29" rx="6" fill="#bfe8fa"/><text x="193" y="79" text-anchor="middle" fill="#075e87" font-size="13" font-weight="700">Application</text><rect x="57" y="98" width="272" height="29" rx="6" fill="#dff4fd"/><text x="193" y="118" text-anchor="middle" fill="#075e87" font-size="13" font-weight="700">Guest OS + virtual hardware</text>
+            <rect x="407" y="20" width="320" height="125" rx="14" fill="#fff" stroke="#69bce0" stroke-width="3"/><text x="567" y="45" text-anchor="middle" fill="#075e87" font-size="17" font-weight="700">VM 2 · Windows</text><rect x="431" y="59" width="272" height="29" rx="6" fill="#bfe8fa"/><text x="567" y="79" text-anchor="middle" fill="#075e87" font-size="13" font-weight="700">Application</text><rect x="431" y="98" width="272" height="29" rx="6" fill="#dff4fd"/><text x="567" y="118" text-anchor="middle" fill="#075e87" font-size="13" font-weight="700">Guest OS + virtual hardware</text>
+            <path d="M193 146 V165 M567 146 V165" stroke="#087aaf" stroke-width="3"/><rect x="33" y="165" width="694" height="45" rx="11" fill="#087aaf"/><text x="380" y="194" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">Hypervisor · shares resources and isolates VMs</text>
+            <path d="M380 210 V225" stroke="#087aaf" stroke-width="3"/><rect x="33" y="225" width="694" height="45" rx="11" fill="#164760"/><text x="380" y="254" text-anchor="middle" fill="#fff" font-size="16" font-weight="700">Physical host · CPU · RAM · disk · network</text>
+          </svg>
+          <figcaption>Each VM has its own guest OS, while the host hardware is shared.</figcaption>
+        </figure>
+        <ol class="steps"><li>The administrator creates a VM and assigns virtual CPU, memory, storage, and network settings.</li><li>The hypervisor maps those virtual resources onto the physical host.</li><li>The guest OS boots and runs applications as if it had its own computer.</li><li>The hypervisor schedules requests and maintains separation between VMs.</li></ol>
+        <p class="source">References: <a href="https://www.redhat.com/en/topics/virtualization/what-is-a-hypervisor" target="_blank" rel="noopener noreferrer">Red Hat · Hypervisor</a> · <a href="https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine/" target="_blank" rel="noopener noreferrer">Microsoft Azure · VM</a></p>
+      </section>
+
+      <section class="topic tradeoffs" id="pros-cons">
+        <p class="kicker">06 · Green · Decision</p>
+        <h2>Pros and cons of virtual machines</h2>
+        <div class="two-col"><div class="list-card good"><h3>Advantages</h3><ul><li><strong>Consolidation:</strong> run several workloads on one physical host.</li><li><strong>Isolation:</strong> give each workload its own guest OS and environment.</li><li><strong>Flexibility:</strong> run different operating systems on the same host.</li><li><strong>Provisioning:</strong> create and restore VMs more easily than setting up new hardware.</li></ul></div><div class="list-card caution"><h3>Tradeoffs</h3><ul><li><strong>Resource cost:</strong> every system VM needs its own guest OS, memory, and storage.</li><li><strong>Management:</strong> guest operating systems need patching, monitoring, and backups.</li><li><strong>Shared host risk:</strong> a host failure can affect several VMs at once.</li><li><strong>Capacity limits:</strong> too many busy VMs can compete for CPU, memory, or storage.</li></ul></div></div>
+        <div class="callout"><p><strong>Remember:</strong> a VM is a complete virtual computer. Later Docker topics can build on this foundation when introducing containers.</p></div>
+        <p class="source">References: <a href="https://azure.microsoft.com/en-us/resources/cloud-computing-dictionary/what-is-a-virtual-machine/" target="_blank" rel="noopener noreferrer">Microsoft Azure · VM benefits</a> · <a href="https://www.redhat.com/en/topics/virtualization/what-is-a-hypervisor" target="_blank" rel="noopener noreferrer">Red Hat · Hypervisors</a></p>
+      </section>
+      <section class="module-intro" id="topic-2">
+        <p class="eyebrow">Docker foundations · Topic 02</p>
+        <h2>Linux processes, namespaces &amp; cgroups</h2>
+        <p>Start with the process Linux runs, then see how systemd manages services and how the kernel can isolate views and control resource use. These features work without Docker.</p>
+      </section>
+
+      <section class="topic process" id="linux-process">
+        <p class="kicker">01 · Amber · Process</p>
+        <h2>What is a Linux process?</h2>
+        <p>A <strong>program</strong> is code stored on disk. A <strong>process</strong> is a running instance of that program. Linux assigns it a process ID (PID), tracks its owner and state, and accounts for CPU time and memory.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 185" role="img" aria-labelledby="process-title process-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="process-title">A program becomes a Linux process</title><desc id="process-desc">A program on disk is started, becoming a process with a PID, owner, memory, CPU use, and state.</desc>
+            <rect x="34" y="30" width="205" height="112" rx="14" fill="#fff" stroke="#d99c69" stroke-width="3"/><path d="M95 50h65l20 20v48H95z" fill="#ffe3c7" stroke="#a64d09" stroke-width="3"/><text x="136" y="164" text-anchor="middle" fill="#844012" font-size="16" font-weight="700">Program on disk</text>
+            <path d="M251 82h132" stroke="#a64d09" stroke-width="4" marker-end="url(#p-arrow)"/><text x="318" y="70" text-anchor="middle" fill="#844012" font-size="14" font-weight="700">execute</text>
+            <rect x="401" y="20" width="325" height="137" rx="15" fill="#fff" stroke="#d99c69" stroke-width="3"/><text x="564" y="50" text-anchor="middle" fill="#844012" font-size="20" font-weight="700">Running process</text><text x="564" y="82" text-anchor="middle" fill="#844012" font-size="14">PID · user · state</text><text x="564" y="110" text-anchor="middle" fill="#844012" font-size="14">CPU time · memory</text><text x="564" y="173" text-anchor="middle" fill="#844012" font-size="15" font-weight="700">One execution of the program</text>
+            <defs><marker id="p-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#a64d09"/></marker></defs>
+          </svg>
+          <figcaption>Starting the same program twice normally creates two separate processes with different PIDs.</figcaption>
+        </figure>
+        <p>For example, <code>php artisan migrate</code> starts a PHP process that exits when the migration finishes. A queue worker, <code>php artisan queue:work</code>, usually keeps running and waiting for jobs. Both are processes.</p>
+        <div class="codebox"><div class="code-label">LINUX · INSPECT PROCESSES</div><pre><code>ps -p 1 -o pid,comm
+ps aux</code></pre></div>
+        <p class="source">Further reading: <a href="https://man7.org/linux/man-pages/man1/ps.1.html" target="_blank" rel="noopener noreferrer">Linux ps manual</a></p>
+      </section>
+
+      <section class="topic daemon" id="daemon">
+        <p class="kicker">02 · Rose · Daemon</p>
+        <h2>What is a daemon?</h2>
+        <p>A <strong>daemon</strong> is a program intended to perform ongoing work in the background. It still runs as one or more ordinary Linux processes. Nginx waits for web requests, <code>sshd</code> waits for SSH connections, and PHP-FPM manages PHP workers.</p>
+        <div class="grid"><div class="mini"><span class="mini-label">SHORT TASK</span><h3>Migration</h3><p><code>php artisan migrate</code> runs a task and exits.</p></div><div class="mini"><span class="mini-label">ONGOING WORK</span><h3>Queue worker</h3><p><code>php artisan queue:work</code> waits for jobs. A service manager can supervise it in the background.</p></div></div>
+        <div class="callout"><p><strong>Subtle point:</strong> a modern daemon does not have to detach itself from its terminal. Under systemd, the program can stay in the foreground relative to systemd while systemd manages it in the background for users.</p></div>
+      </section>
+
+      <section class="topic service" id="service">
+        <p class="kicker">03 · Indigo · Service</p>
+        <h2>What is a service?</h2>
+        <p>A <strong>service</strong> is a function the machine provides. On many Linux systems, systemd defines how to start, stop, supervise, and report that function with a <code>.service</code> unit. Not every Linux distribution uses systemd.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 218" role="img" aria-labelledby="service-title service-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="service-title">systemd manages a service and its processes</title><desc id="service-desc">systemd starts nginx.service, which manages an Nginx master process and worker processes.</desc>
+            <rect x="24" y="78" width="170" height="63" rx="12" fill="#4f46ad"/><text x="109" y="116" text-anchor="middle" fill="#fff" font-size="20" font-weight="700">systemd</text>
+            <path d="M198 109h75" stroke="#4f46ad" stroke-width="4" marker-end="url(#s-arrow)"/><rect x="286" y="70" width="190" height="80" rx="12" fill="#e9e7ff" stroke="#4f46ad" stroke-width="3"/><text x="381" y="107" text-anchor="middle" fill="#302a82" font-size="18" font-weight="700">nginx.service</text><text x="381" y="132" text-anchor="middle" fill="#514a98" font-size="13">unit configuration</text>
+            <path d="M480 109h43" stroke="#4f46ad" stroke-width="4" marker-end="url(#s-arrow)"/><g fill="#fff" stroke="#4f46ad" stroke-width="2"><rect x="538" y="24" width="197" height="48" rx="10"/><rect x="538" y="85" width="197" height="48" rx="10"/><rect x="538" y="146" width="197" height="48" rx="10"/></g><g fill="#302a82" font-size="14" font-weight="700" text-anchor="middle"><text x="636" y="54">master process</text><text x="636" y="115">worker process</text><text x="636" y="176">worker process</text></g><defs><marker id="s-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#4f46ad"/></marker></defs>
+          </svg>
+          <figcaption>The unit describes management; the Nginx processes perform the work.</figcaption>
+        </figure>
+        <p>For a Laravel queue, <code>systemctl start laravel-queue</code> asks systemd to read the unit and start its configured command. Linux creates the PHP process; systemd tracks its status. A unit with <code>Restart=on-failure</code> can restart a process after failure.</p>
+        <div class="codebox"><div class="code-label">LINUX · READ-ONLY INSPECTION</div><pre><code>systemctl status nginx
+systemctl show nginx -p MainPID -p ControlGroup
+ps aux | grep '[n]ginx'</code></pre></div>
+        <p>These Nginx commands apply only where Nginx and systemd are installed.</p>
+        <p class="source">Further reading: <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html" target="_blank" rel="noopener noreferrer">systemd.service manual</a></p>
+      </section>
+
+      <section class="topic namespace" id="namespaces">
+        <p class="kicker">04 · Cyan · Namespaces</p>
+        <h2>Namespaces change what processes see</h2>
+        <p><strong>Linux namespaces are kernel features, not Docker-specific features.</strong> A namespace gives a group of processes its own view of one part of the system. Processes in different namespaces can share the same kernel and physical host while seeing different hostnames, process IDs, networks, or mounts.</p>
+        <div class="table-scroll"><table><thead><tr><th>Namespace</th><th>What it separates</th><th>Ordinary Linux use</th></tr></thead><tbody><tr><td><strong>PID</strong></td><td>Process ID view</td><td>Process isolation</td></tr><tr><td><strong>NET</strong></td><td>Interfaces and routes</td><td>Network testing</td></tr><tr><td><strong>MNT</strong></td><td>Mounted filesystem view</td><td>Service filesystem sandboxing</td></tr><tr><td><strong>USER</strong></td><td>User and group ID mappings</td><td>Privilege separation</td></tr><tr><td><strong>UTS</strong></td><td>Hostname and domain name</td><td>Hostname isolation</td></tr></tbody></table></div>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 250" role="img" aria-labelledby="ns-title ns-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="ns-title">Two UTS namespaces share one kernel</title><desc id="ns-desc">A production shell and a testing shell on one server see different hostnames because they are in separate UTS namespaces; both share one Linux kernel.</desc>
+            <rect x="27" y="19" width="337" height="143" rx="15" fill="#fff" stroke="#5bb9d0" stroke-width="3"/><rect x="396" y="19" width="337" height="143" rx="15" fill="#fff" stroke="#5bb9d0" stroke-width="3"/><text x="195" y="49" text-anchor="middle" fill="#0b5e75" font-size="18" font-weight="700">Original UTS namespace</text><text x="565" y="49" text-anchor="middle" fill="#0b5e75" font-size="18" font-weight="700">New UTS namespace</text><rect x="60" y="69" width="270" height="62" rx="10" fill="#d9f4fa"/><rect x="430" y="69" width="270" height="62" rx="10" fill="#d9f4fa"/><text x="195" y="95" text-anchor="middle" fill="#0b5e75" font-size="14">Shell A sees hostname</text><text x="195" y="117" text-anchor="middle" fill="#0b5e75" font-size="17" font-weight="700">production-server</text><text x="565" y="95" text-anchor="middle" fill="#0b5e75" font-size="14">Shell B sees hostname</text><text x="565" y="117" text-anchor="middle" fill="#0b5e75" font-size="17" font-weight="700">testing-server</text><path d="M195 163v24M565 163v24" stroke="#0e7490" stroke-width="3"/><rect x="27" y="188" width="706" height="42" rx="10" fill="#0e7490"/><text x="380" y="215" text-anchor="middle" fill="#fff" font-size="17" font-weight="700">Same Linux kernel and physical server</text>
+          </svg>
+          <figcaption>Namespace isolation changes a process's view; it does not create another kernel.</figcaption>
+        </figure>
+        <h3>Try a UTS namespace without Docker</h3>
+        <p>On a Linux lab machine, compare the hostname in two terminals. The first terminal creates a new UTS namespace and changes the hostname only for processes in that namespace.</p>
+        <div class="codebox"><div class="code-label">TERMINAL 1 · LINUX LAB</div><pre><code>hostname
+sudo unshare --uts /bin/bash
+hostname testing-server
+hostname
+exit</code></pre></div>
+        <div class="codebox"><div class="code-label">TERMINAL 2 · WHILE TERMINAL 1 IS IN THE NEW NAMESPACE</div><pre><code>hostname
+# The original hostname remains visible here.</code></pre></div>
+        <h3>Try a network namespace without Docker</h3>
+        <div class="codebox"><div class="code-label">LINUX LAB · REQUIRES iproute2 AND SUDO</div><pre><code>sudo ip netns add test-network
+sudo ip netns list
+sudo ip netns exec test-network ip addr
+sudo ip netns delete test-network</code></pre></div>
+        <p>The new network namespace has its own interfaces and routing table. It will not automatically have external connectivity. Both examples use Linux tools directly, with no Docker or Kubernetes.</p>
+        <p class="source">References: <a href="https://man7.org/linux/man-pages/man7/namespaces.7.html" target="_blank" rel="noopener noreferrer">Linux namespaces manual</a> · <a href="https://man7.org/linux/man-pages/man7/uts_namespaces.7.html" target="_blank" rel="noopener noreferrer">UTS namespaces</a> · <a href="https://man7.org/linux/man-pages/man8/ip-netns.8.html" target="_blank" rel="noopener noreferrer">ip-netns manual</a></p>
+      </section>
+
+      <section class="topic cgroups" id="cgroups">
+        <p class="kicker">05 · Violet · cgroups</p>
+        <h2>cgroups control and account for resources</h2>
+        <p><strong>Control groups (cgroups) are another Linux kernel feature.</strong> They organize processes into groups so the kernel can monitor and limit resource use such as CPU time and memory. cgroups do not by themselves hide processes or give them a different hostname; that is the job of namespaces.</p>
+        <figure class="diagram">
+          <svg viewBox="0 0 760 250" role="img" aria-labelledby="cg-title cg-desc" xmlns="http://www.w3.org/2000/svg">
+            <title id="cg-title">systemd service cgroups and their processes</title><desc id="cg-desc">systemd organizes Nginx and PHP-FPM services into cgroups; each group holds its processes and can have resource limits.</desc>
+            <rect x="26" y="14" width="708" height="221" rx="15" fill="#fff" stroke="#bb88d5" stroke-width="3"/><rect x="49" y="31" width="662" height="40" rx="9" fill="#7e35a5"/><text x="380" y="57" text-anchor="middle" fill="#fff" font-size="18" font-weight="700">system.slice · systemd's service groups</text><path d="M380 71v24M204 95h352M204 95v20M556 95v20" stroke="#7e35a5" stroke-width="3"/>
+            <rect x="62" y="115" width="284" height="92" rx="12" fill="#f2e0fb" stroke="#a967c9" stroke-width="2"/><rect x="414" y="115" width="284" height="92" rx="12" fill="#f2e0fb" stroke="#a967c9" stroke-width="2"/><text x="204" y="143" text-anchor="middle" fill="#5d1e80" font-size="17" font-weight="700">nginx.service</text><text x="204" y="169" text-anchor="middle" fill="#5d1e80" font-size="14">master + worker processes</text><text x="204" y="190" text-anchor="middle" fill="#5d1e80" font-size="13">CPU and memory accounted</text><text x="556" y="143" text-anchor="middle" fill="#5d1e80" font-size="17" font-weight="700">php-fpm.service</text><text x="556" y="169" text-anchor="middle" fill="#5d1e80" font-size="14">manager + worker processes</text><text x="556" y="190" text-anchor="middle" fill="#5d1e80" font-size="13">CPU and memory limit possible</text>
+          </svg>
+          <figcaption>systemd can manage cgroups for normal services on a server with no containers.</figcaption>
+        </figure>
+        <div class="codebox"><div class="code-label">LINUX · READ-ONLY EXPLORATION</div><pre><code>systemd-cgls
+systemd-cgtop
+systemctl show nginx -p ControlGroup</code></pre></div>
+        <p>For example, a systemd override for a PHP-FPM service could contain the following. The actual unit name depends on the installed PHP version and distribution.</p>
+        <div class="codebox"><div class="code-label">EXAMPLE SERVICE OVERRIDE · NOT A COMMAND TO RUN</div><pre><code>[Service]
+MemoryMax=1G
+CPUQuota=100%</code></pre></div>
+        <p><code>MemoryMax=1G</code> sets a 1 GiB memory ceiling for the unit. <code>CPUQuota=100%</code> allows at most the CPU time of one logical CPU. The limit applies to processes in that service's cgroup, not only its main process.</p>
+        <div class="callout"><p><strong>On production systems:</strong> applying a low memory limit can cause PHP-FPM workers to be killed, and restarting the service interrupts requests. Try resource limits on a lab service first.</p></div>
+        <p class="source">References: <a href="https://man7.org/linux/man-pages/man7/cgroups.7.html" target="_blank" rel="noopener noreferrer">Linux cgroups manual</a> · <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.resource-control.html" target="_blank" rel="noopener noreferrer">systemd resource controls</a></p>
+      </section>
+
+      <section class="topic connection" id="linux-to-docker">
+        <p class="kicker">06 · Green · Put it together</p>
+        <h2>Linux, systemd, Docker, and Kubernetes</h2>
+        <div class="table-scroll"><table><thead><tr><th>Technology</th><th>Role</th></tr></thead><tbody><tr><td><strong>Linux kernel</strong></td><td>Implements processes, namespaces, and cgroups.</td></tr><tr><td><strong>systemd</strong></td><td>Manages services and uses cgroups; it can also use namespaces for service sandboxing.</td></tr><tr><td><strong>Docker</strong></td><td>Manages containers and uses Linux features including namespaces and cgroups.</td></tr><tr><td><strong>Kubernetes</strong></td><td>On Linux nodes, orchestrates workloads through container runtimes that use these Linux features.</td></tr></tbody></table></div>
+        <div class="grid three"><div class="mini"><span class="mini-label">NAMESPACES</span><h3>Isolation</h3><p>Change what a process can see.</p></div><div class="mini"><span class="mini-label">CGROUPS</span><h3>Resource control</h3><p>Track and constrain what a group uses.</p></div><div class="mini"><span class="mini-label">SYSTEMD</span><h3>Service management</h3><p>Start, supervise, and organize services.</p></div></div>
+        <div class="callout"><p><strong>Core idea:</strong> a Linux container is made of ordinary processes with isolation and resource controls, alongside other security mechanisms. Namespaces and cgroups also work on an ordinary Linux server without Docker.</p></div>
+        <p class="source">Further reading: <a href="https://man7.org/linux/man-pages/man7/namespaces.7.html" target="_blank" rel="noopener noreferrer">Namespaces</a> · <a href="https://man7.org/linux/man-pages/man7/cgroups.7.html" target="_blank" rel="noopener noreferrer">cgroups</a> · <a href="https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html" target="_blank" rel="noopener noreferrer">systemd sandboxing</a></p>
+      </section>
+      <footer class="finish">End of Topic 02 · <a href="#overview">Back to Topic 01</a> · <a href="index.html">All courses</a></footer>
+    </main>
+  </div>
 </body>
 </html>
