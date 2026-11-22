@@ -1,4 +1,64 @@
 /* Slide presentation layout matched to the Terraform course. */
+.docker-deck .deck-slide.storage-topic { border-top: 5px solid var(--accent); }
+.storage-topic .kicker, .storage-topic .code-label { font-size: 12px; }
+.storage-topic .mini p { font-size: 16px; }
+.storage-topic .source, .storage-topic figcaption { font-size: 14px; }
+.storage-topic caption { padding: 12px; text-align: left; font-weight: 700; }
+.storage-index { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 24px 0; }
+.storage-index a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-left: 4px solid var(--index-color); border-radius: 9px; color: var(--ink); text-decoration: none; background: #fff; font-weight: 600; }
+.storage-index a:hover { background: #f1f5f9; }
+.storage-index span { color: var(--index-color); font-variant-numeric: tabular-nums; }
+.storage-layers, .storage-map, .storage-platform { margin: 22px 0; padding: 22px; border: 1px solid var(--line); border-radius: 16px; background: var(--tint); }
+.storage-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.storage-layer { display: flex; justify-content: space-between; gap: 12px; padding: 14px 20px; border: 1px solid #b7cce7; border-radius: 10px; margin-bottom: 8px; background: #fff; }
+.storage-layer.storage-write { display: grid; gap: 4px; border: 2px solid var(--accent); }
+.storage-layer small { color: var(--muted); font-size: 14px; }
+.storage-connect { padding: 6px 0 14px; text-align: center; color: var(--accent); font-weight: 600; }
+.storage-topic figcaption { margin-top: 14px; color: var(--muted); }
+.storage-map-heading, .storage-route { display: grid; grid-template-columns: minmax(0,1fr) 32px minmax(0,1fr); align-items: center; gap: 8px; }
+.storage-map-heading { margin-bottom: 10px; padding: 0 14px; font-size: 14px; }
+.storage-route { margin: 12px 0; }
+.storage-route > div { padding: 14px 16px; background: #fff; border: 1px solid var(--route); border-radius: 10px; min-height: 90px; overflow-wrap: anywhere; }
+.storage-route small, .storage-route strong { display: block; }
+.storage-route small { margin-top: 4px; color: var(--muted); font-size: 14px; }
+.storage-route > span { color: var(--route); text-align: center; font-size: 25px; }
+.storage-platform div { border: 2px solid #a5b4fc; border-radius: 12px; background: #fff; padding: 18px; }
+.storage-platform div div { margin-top: 14px; background: #eef2ff; }
+.storage-platform div div div { background: #e0e7ff; }
+.storage-platform span { display: block; color: var(--muted); }
+.storage-readings { padding-left: 22px; }
+.storage-readings li { margin: 10px 0; }
+.storage-seeding { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); align-items: center; gap: 10px; margin: 24px 0; padding: 20px; background: var(--tint); border-radius: 14px; }
+.storage-seeding > div { padding: 16px; border: 1px solid var(--accent); border-radius: 10px; background: #fff; }
+.storage-seeding strong, .storage-seeding div span { display: block; }
+.storage-seeding div span { margin-top: 8px; color: var(--muted); }
+.storage-seeding > span { color: var(--accent); text-align: center; font-size: 24px; }
+.storage-seeding figcaption, .storage-image-map figcaption { grid-column: 1 / -1; }
+.storage-image-map { display: grid; grid-template-columns: minmax(0,.85fr) 84px minmax(0,1.2fr); align-items: center; gap: 14px; margin: 22px 0; padding: 22px; border-radius: 16px; background: var(--tint); border: 1px solid var(--line); }
+.storage-image-source, .storage-image-target { padding: 18px; border: 2px solid var(--accent); border-radius: 12px; background: #fff; min-width: 0; }
+.storage-image-source > *, .storage-image-target span { display: block; }
+.storage-image-source span { margin: 10px 0; font-family: Consolas,monospace; }
+.storage-image-source small { color: var(--muted); font-size: 14px; }
+.storage-image-connector { text-align: center; color: var(--accent); font-size: 14px; }
+.storage-image-connector b { display: block; font-size: 28px; }
+.storage-image-target > div { padding: 12px; margin-top: 12px; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; }
+.storage-image-target > div:last-child { border-color: var(--accent); background: var(--tint); }
+.storage-image-target code { display: block; margin-top: 5px; overflow-wrap: anywhere; }
+.storage-points { padding-left: 22px; }
+.storage-points li { margin: 6px 0; }
+@media(max-width:600px) {
+ .storage-seeding, .storage-image-map { grid-template-columns: minmax(0,1fr); padding: 14px; }
+ .storage-seeding > span, .storage-image-connector b { transform: rotate(90deg); line-height: 1; }
+ .storage-image-connector { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 6px; }
+ .storage-index, .storage-pair { grid-template-columns: 1fr; }
+ .storage-layers, .storage-map, .storage-platform { padding: 14px; }
+ .storage-layer { flex-direction: column; gap: 4px; padding: 12px; }
+ .storage-map-heading { display: none; }
+ .storage-route { grid-template-columns: 1fr; gap: 4px; margin: 20px 0; }
+ .storage-route > span { transform: rotate(90deg); line-height: 1; }
+ .storage-route > div { min-height: 0; }
+ .storage-platform div { padding: 12px; }
+}
 .docker-deck #topic-9 { border-top: 5px solid var(--accent); }
 .os-host-stack { padding: 20px; margin: 20px 0; background: var(--tint); border: 1px solid var(--accent); border-radius: 14px; text-align: center; }
 .os-host-stack .grid > div { padding: 16px; border: 1px solid var(--accent); border-radius: 10px; background: #fff; font-weight: 700; }

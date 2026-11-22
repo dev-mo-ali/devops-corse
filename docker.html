@@ -36,7 +36,7 @@
   <a class="skip" href="#main">Skip to lesson</a>
   <header class="topbar">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–09</small></span></a>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–10</small></span></a>
     <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#course-topics">Topics list</a></nav>
   </header>
   <div class="shell">
@@ -140,6 +140,28 @@
         <a href="#container-os-terms" style="--dot:#aa5624"><span class="nav-dot"></span>Three related terms</a>
         <a href="#container-os-responsibilities" style="--dot:#4a762c"><span class="nav-dot"></span>Who manages the processes?</a>
       </nav>
+      <p class="sidebar-label">TOPIC 10 · DOCKER STORAGE</p>
+      <nav aria-label="Topic 10 sections">
+        <a href="#topic-10" style="--dot:#b45309"><span class="nav-dot"></span>Docker storage · lesson index</a>
+        <a href="#storage-types" style="--dot:#6d28d9"><span class="nav-dot"></span>Five mount types at a glance</a>
+        <a href="#storage-layers" style="--dot:#2563eb"><span class="nav-dot"></span>Image and writable layers</a>
+        <a href="#storage-lifecycle" style="--dot:#9f1239"><span class="nav-dot"></span>Stop, restart, and remove</a>
+        <a href="#storage-mounts" style="--dot:#0f766e"><span class="nav-dot"></span>Where do files live?</a>
+        <a href="#storage-volumes" style="--dot:#4d7c0f"><span class="nav-dot"></span>Demo · keep data in a volume</a>
+        <a href="#storage-volume-behavior" style="--dot:#3f6212"><span class="nav-dot"></span>Volumes · existing files and sharing</a>
+        <a href="#storage-bind-mounts" style="--dot:#7e22ce"><span class="nav-dot"></span>Demo · share a laptop folder</a>
+        <a href="#storage-bind-options" style="--dot:#a21caf"><span class="nav-dot"></span>Bind mounts · syntax and access</a>
+        <a href="#storage-tmpfs" style="--dot:#0369a1"><span class="nav-dot"></span>Demo · temporary memory storage</a>
+        <a href="#storage-image-mounts" style="--dot:#075985"><span class="nav-dot"></span>Image mounts · read-only content</a>
+        <a href="#storage-image-demo" style="--dot:#0e6877"><span class="nav-dot"></span>Demo · mount an Ubuntu image</a>
+        <a href="#storage-backends" style="--dot:#b54725"><span class="nav-dot"></span>Storage drivers and volume drivers</a>
+        <a href="#storage-containerd" style="--dot:#6b4f9e"><span class="nav-dot"></span>containerd image store · check your setup</a>
+        <a href="#storage-windows" style="--dot:#4338ca"><span class="nav-dot"></span>Windows 11 and native Windows containers</a>
+        <a href="#storage-backup" style="--dot:#0e7490"><span class="nav-dot"></span>Demo · back up and restore</a>
+        <a href="#storage-troubleshooting" style="--dot:#a16207"><span class="nav-dot"></span>Inspect and troubleshoot</a>
+        <a href="#storage-cleanup" style="--dot:#be185d"><span class="nav-dot"></span>Clean up the practice resources</a>
+        <a href="#storage-review" style="--dot:#475569"><span class="nav-dot"></span>Review and source readings</a>
+      </nav>
     </aside>
     <main id="main">
       <section class="course-cover" id="course-topics">
@@ -157,6 +179,7 @@
           <a class="topic-link" href="#topic-7" style="--card:#75508c"><small>TOPIC 07</small><strong>Basic Docker commands</strong><span>Run, inspect, stop, build, share, and clean up with a guided Nginx exercise.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-8" style="--card:#a34432"><small>TOPIC 08</small><strong>Container is a process</strong><span>Explore processes, PID 1, isolation, and the shared Linux kernel.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-9" style="--card:#1f5897"><small>TOPIC 09</small><strong>Does a container have an OS?</strong><span>Userspace, shared kernels, distribution images, and container host operating systems.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-10" style="--card:#b45309"><small>TOPIC 10</small><strong>Docker storage</strong><span>Five mount categories, persistence labs, image mounts, and storage backends.</span><em>Open topic</em></a>
         </nav>
       </section>
       <section class="module-intro topic-zero" id="why-containers">
@@ -1119,6 +1142,307 @@ docker rm process-demo</pre></div>
 <details><summary>Check · Ubuntu and Alpine report different distribution names but the same kernel release. Why?</summary><p>Their filesystem contents come from different images. Both containers run processes on the same Linux Docker host, so both report its kernel release.</p></details>
 <details><summary>Check · does an Ubuntu image on Windows boot an Ubuntu kernel?</summary><p>Docker Desktop provides the Linux environment and kernel. The Ubuntu image supplies the userspace files used by the container’s processes.</p></details>
 <p class="source">Connect this with <a href="#container-process-tree">Topic 8’s process tree</a> and <a href="https://docs.docker.com/engine/containers/multi-service_container/">Docker’s main-process responsibilities</a>.</p>
+      </section>
+      <section class="topic storage-topic" id="topic-10" style="--accent:#b45309;--tint:#fff4e5">
+<p class="kicker">Topic 10 · Docker storage</p><h2>Keep the data. Replace the container.</h2>
+<p class="lead">Images provide the starting files. Storage choices decide where new data goes and how long it lasts.</p>
+<p>Explore five mount categories, then demonstrate persistence and read-only image mounts. Commands use <strong>PowerShell on Windows 11 with Docker Desktop in Linux container mode</strong>.</p>
+<nav class="storage-index" aria-label="Topic 10 lesson index">
+<a href="#storage-types" style="--index-color:#6d28d9"><span>01</span>Five mount types at a glance</a>
+<a href="#storage-layers" style="--index-color:#2563eb"><span>02</span>Image and writable layers</a>
+<a href="#storage-lifecycle" style="--index-color:#9f1239"><span>03</span>Stop, restart, and remove</a>
+<a href="#storage-mounts" style="--index-color:#0f766e"><span>04</span>Where do files live?</a>
+<a href="#storage-volumes" style="--index-color:#4d7c0f"><span>05</span>Demo · keep data in a volume</a>
+<a href="#storage-volume-behavior" style="--index-color:#3f6212"><span>06</span>Volumes · existing files and sharing</a>
+<a href="#storage-bind-mounts" style="--index-color:#7e22ce"><span>07</span>Demo · share a laptop folder</a>
+<a href="#storage-bind-options" style="--index-color:#a21caf"><span>08</span>Bind mounts · syntax and access</a>
+<a href="#storage-tmpfs" style="--index-color:#0369a1"><span>09</span>Demo · temporary memory storage</a>
+<a href="#storage-image-mounts" style="--index-color:#075985"><span>10</span>Image mounts · read-only content</a>
+<a href="#storage-image-demo" style="--index-color:#0e6877"><span>11</span>Demo · mount an Ubuntu image</a>
+<a href="#storage-backends" style="--index-color:#b54725"><span>12</span>Storage drivers and volume drivers</a>
+<a href="#storage-containerd" style="--index-color:#6b4f9e"><span>13</span>containerd image store · check your setup</a>
+<a href="#storage-windows" style="--index-color:#4338ca"><span>14</span>Windows 11 and native Windows containers</a>
+<a href="#storage-backup" style="--index-color:#0e7490"><span>15</span>Demo · back up and restore</a>
+<a href="#storage-troubleshooting" style="--index-color:#a16207"><span>16</span>Inspect and troubleshoot</a>
+<a href="#storage-cleanup" style="--index-color:#be185d"><span>17</span>Clean up the practice resources</a>
+<a href="#storage-review" style="--index-color:#475569"><span>18</span>Review and source readings</a>
+</nav>
+<p class="source">Built around the <a href="https://docs.docker.com/engine/storage/">official Docker storage guide</a>. All six core references and earlier readings are linked in the <a href="#storage-review">review and sources</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-types" style="--accent:#6d28d9;--tint:#f5f3ff">
+<p class="kicker">Topic 10 · 01 · Mount types</p><h2>How many storage types?</h2>
+<p>Docker’s storage overview lists <strong>five mount categories</strong>. Three are common choices for application data. The other two serve specialized purposes.</p>
+<div class="table-scroll"><table><caption>Mounts available beyond the container’s own writable layer</caption><thead><tr><th>Mount</th><th>Source</th><th>Typical use</th></tr></thead><tbody>
+<tr><td><a href="#storage-volumes">Volume</a></td><td>Docker-managed data</td><td>Persistent database files and uploads</td></tr>
+<tr><td><a href="#storage-bind-mounts">Bind mount</a></td><td>A chosen host path</td><td>Source code or local configuration</td></tr>
+<tr><td><a href="#storage-tmpfs">tmpfs</a></td><td>Linux memory</td><td>Disposable working files</td></tr>
+<tr><td><a href="#storage-image-mounts">Image mount</a></td><td>Another image’s filesystem</td><td>Read-only tools or packaged assets</td></tr>
+<tr><td>Named pipe</td><td>A Windows communication endpoint</td><td>Host–container communication, not file persistence</td></tr>
+</tbody></table></div>
+<div class="grid"><div class="mini"><h3>Application storage</h3><p>Where should the application read or write? Choose mounts by data lifetime and access needs.</p></div><div class="mini"><h3>Daemon storage backend</h3><p>How are images and writable layers stored? Classic drivers and containerd snapshotters handle this separate job.</p></div></div>
+<div class="callout"><p>The default <strong>writable container layer</strong> is separate from these five mount categories. Its data belongs to that container.</p></div>
+<p class="source">Source: <a href="https://docs.docker.com/engine/storage/">Docker storage overview and mount options</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-layers" style="--accent:#2563eb;--tint:#eff6ff">
+<p class="kicker">Topic 10 · 02 · Layers</p><h2>One image, separate changes</h2>
+<p>An image supplies read-only filesystem layers. Each container adds its own writable layer. The app sees a combined filesystem, plus any mounted directories.</p>
+<figure class="storage-layers" aria-labelledby="storage-layers-caption">
+<div class="storage-pair"><div class="storage-layer storage-write"><strong>Container A</strong><span>Writable layer A</span><small>Edited /app/config.json</small></div><div class="storage-layer storage-write"><strong>Container B</strong><span>Writable layer B</span><small>Still sees the original file</small></div></div>
+<div class="storage-connect" aria-hidden="true">↓ combined filesystem views ↓</div>
+<div class="storage-layer"><strong>Application files</strong><span>Read-only image layer</span></div>
+<div class="storage-layer"><strong>Runtime and libraries</strong><span>Read-only image layer</span></div>
+<div class="storage-layer"><strong>Base filesystem</strong><span>Read-only image layers</span></div>
+<figcaption id="storage-layers-caption">The containers can reuse the same image layers. Container A’s changes stay in A’s writable layer.</figcaption>
+</figure>
+<div class="callout"><p><strong>Copy-on-write example:</strong> with OverlayFS, changing a file from an image first copies it into the container’s writable layer. The original stays unchanged. Newly created files go straight into the writable layer unless their path is mounted elsewhere.</p></div>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/drivers/">Docker’s layers and copy-on-write explanation</a> and <a href="https://dev.to/meghasharmaaaa/docker-storage-drivers-4a75">the supplied storage-driver article</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-lifecycle" style="--accent:#9f1239;--tint:#fff1f2">
+<p class="kicker">Topic 10 · 03 · Lifecycle</p><h2>Stopped is different from removed</h2>
+<p>For these Linux container examples, <code>docker stop</code> ends the process but keeps the container. <code>docker start</code> starts that same container. <code>docker rm</code> deletes the container and its writable layer.</p>
+<div class="table-scroll"><table><caption>What remains after each action?</caption><thead><tr><th>Data location</th><th>Stop / start</th><th>Remove container</th></tr></thead><tbody>
+<tr><td>Container writable layer</td><td>Kept</td><td>Deleted</td></tr>
+<tr><td>Named volume</td><td>Kept</td><td>Kept until separately deleted</td></tr>
+<tr><td>Bind-mounted host folder</td><td>Kept</td><td>Kept on the host</td></tr>
+<tr><td>tmpfs mount</td><td>Cleared when stopped</td><td>Gone</td></tr>
+<tr><td>Image mount</td><td>Same read-only source</td><td>Mount gone; source image remains</td></tr>
+</tbody></table></div>
+<div class="codebox"><div class="code-label">PowerShell · write, stop, restart, and read</div><pre>docker run -d --name storage-layer-demo alpine:3.22 sleep 86400
+docker exec storage-layer-demo sh -c "echo kept-after-stop > /message.txt"
+docker stop storage-layer-demo
+docker start storage-layer-demo
+docker exec storage-layer-demo cat /message.txt</pre></div>
+<p><strong>Expected:</strong> <code>kept-after-stop</code>. Keep this demo container for the inspection lesson. With <code>--rm</code>, Docker automatically removes a container after exit, so its writable-layer changes also disappear.</p>
+<p class="source">See <a href="https://docs.docker.com/reference/cli/docker/container/run/">Docker run and restart behavior</a>, <a href="https://docs.docker.com/engine/storage/volumes/">volume lifecycle</a>, and <a href="https://docs.docker.com/engine/storage/tmpfs/">tmpfs lifetime</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-mounts" style="--accent:#0f766e;--tint:#ecfdf5">
+<p class="kicker">Topic 10 · 04 · Storage map</p><h2>Follow files to their storage</h2>
+<p>A mount connects a container path to another storage location. Your app still opens ordinary files. The path it accesses determines the backing storage.</p>
+<figure class="storage-map" aria-labelledby="storage-map-caption">
+<div class="storage-map-heading"><strong>Container filesystem path</strong><span aria-hidden="true"></span><strong>Backing storage</strong></div>
+<div class="storage-route" style="--route:#9f1239"><div><strong>/app/generated.txt</strong><small>Example path with no mount</small></div><span aria-hidden="true">→</span><div><strong>Container writable layer</strong><small>Lifetime of this container</small></div></div>
+<div class="storage-route" style="--route:#4d7c0f"><div><strong>/data/message.txt</strong><small>Named volume mounted at /data</small></div><span aria-hidden="true">→</span><div><strong>course-storage-data volume</strong><small>Docker manages the location</small></div></div>
+<div class="storage-route" style="--route:#7e22ce"><div><strong>/workspace/message.txt</strong><small>Bind mount at /workspace</small></div><span aria-hidden="true">→</span><div><strong>Your chosen host folder</strong><small>Host tools can edit these files</small></div></div>
+<div class="storage-route" style="--route:#0369a1"><div><strong>/scratch/work.txt</strong><small>tmpfs mounted at /scratch</small></div><span aria-hidden="true">→</span><div><strong>Linux host memory</strong><small>Temporary; swap may use disk</small></div></div>
+<div class="storage-route" style="--route:#075985"><div><strong>/image-files/etc/os-release</strong><small>Image mount at /image-files · reads only</small></div><span aria-hidden="true">←</span><div><strong>ubuntu:24.04 image files</strong><small>Read-only source in the local image store</small></div></div>
+<figcaption id="storage-map-caption">Conceptual destinations. Each mount applies only at its target path and beneath it. A volume mounted at /data does not preserve files written to /app.</figcaption>
+</figure>
+<p><strong>Choose by purpose:</strong> a named volume for database data, a bind mount for files edited on your laptop, tmpfs for disposable working data, and an image mount for packaged read-only assets. All persistent storage still needs backups.</p>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/">Docker mount options</a> and the supplied <a href="https://networkdirection.net/articles/containers/docker-storage/">Network Direction storage guide</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-volumes" style="--accent:#4d7c0f;--tint:#f7fee7">
+<p class="kicker">Topic 10 · 05 · Named volume demo</p><h2>A new container reads the old data</h2>
+<p>Create a named volume, write a message, then let a second container read it. Both temporary containers are removed when their commands finish.</p>
+<div class="codebox"><div class="code-label">PowerShell · create and write</div><pre>docker volume create course-storage-data
+docker run --rm --mount type=volume,src=course-storage-data,dst=/data alpine:3.22 sh -c "echo hello-from-volume > /data/message.txt"</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · read from a fresh container</div><pre>docker run --rm --mount type=volume,src=course-storage-data,dst=/data,readonly alpine:3.22 cat /data/message.txt
+docker volume inspect course-storage-data</pre></div>
+<p><strong>Expected:</strong> <code>hello-from-volume</code>. The reader mounts the same volume name. <code>src</code> identifies the volume and <code>dst</code> is its path inside the container.</p>
+<figure class="lifecycle"><div><strong>Writer container</strong><span>Writes message, then exits</span></div><span aria-hidden="true">→</span><div><strong>Named volume</strong><span>Keeps message.txt</span></div><span aria-hidden="true">→</span><div><strong>Reader container</strong><span>Reads the same file</span></div><figcaption>The data has a lifecycle independent of either container.</figcaption></figure>
+<details><summary>Named and anonymous volumes</summary><p>A named volume has a reusable name such as <code>course-storage-data</code>. An anonymous volume gets a generated identifier. A container started with <code>--rm</code> also removes its associated anonymous volumes on exit, while named volumes remain. Use explicit names for this course’s persistent data.</p></details>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/volumes/">Docker volumes</a>, <a href="https://docs.docker.com/reference/cli/docker/container/run/#clean-up---rm">automatic cleanup</a>, and <a href="https://iamachs.com/blog/docker/part-5-understanding-docker-storage-and-volumes">the supplied persistence walkthrough</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-volume-behavior" style="--accent:#3f6212;--tint:#f0fdf4">
+<p class="kicker">Topic 10 · 06 · Volume behavior</p><h2>What happens to existing files?</h2>
+<figure class="storage-seeding" aria-labelledby="storage-seeding-caption">
+<div><strong>Image directory</strong><span>/data/defaults.json</span></div><span aria-hidden="true">→</span><div><strong>New empty volume</strong><span>Initial files copied by default</span></div><span aria-hidden="true">→</span><div><strong>Container view</strong><span>/data now shows the volume</span></div>
+<figcaption id="storage-seeding-caption">Initial seeding copies files into an empty volume. It does not keep that volume synchronized with later image updates.</figcaption></figure>
+<div class="table-scroll"><table><thead><tr><th>Mount at a populated image directory</th><th>Result</th></tr></thead><tbody>
+<tr><td>Empty volume</td><td>Docker copies existing image files into it.</td></tr>
+<tr><td>Empty volume with <code>volume-nocopy</code></td><td>No initial copy.</td></tr>
+<tr><td>Volume already containing data</td><td>The volume’s files hide the image directory’s files.</td></tr>
+<tr><td>Bind mount</td><td>The host path hides image files; no automatic seeding.</td></tr>
+</tbody></table></div>
+<p><code>readonly</code> controls access through one mount. Other writers can still change shared data. Multiple containers can mount one volume, but the application must coordinate concurrent writes.</p>
+<details><summary>Advanced option · mount one subdirectory</summary><p><code>volume-subpath</code> selects an existing directory inside the volume. Create that directory before attaching it. A <code>local</code> volume name identifies data on one Docker host; it does not automatically provide shared storage across hosts.</p></details>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/volumes/">volume population, sharing, and mount options</a> and <a href="https://docs.docker.com/engine/storage/bind-mounts/#bind-mounting-over-existing-data">bind-mount behavior</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-bind-mounts" style="--accent:#7e22ce;--tint:#faf5ff">
+<p class="kicker">Topic 10 · 07 · Bind mount demo</p><h2>Edit on Windows. Read in Linux.</h2>
+<p>Run this in a writable practice folder. PowerShell creates a host directory and resolves its absolute path. Docker Desktop shares it with the Linux container.</p>
+<div class="codebox"><div class="code-label">PowerShell · prepare a local folder</div><pre>New-Item -ItemType Directory -Path .\docker-storage-demo -Force | Out-Null
+$storageDemoPath = (Resolve-Path .\docker-storage-demo).Path
+Set-Content -LiteralPath "$storageDemoPath\message.txt" -Value "hello-from-Windows"</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · read the host file</div><pre>docker run --rm --mount "type=bind,src=$storageDemoPath,dst=/workspace,readonly" alpine:3.22 cat /workspace/message.txt</pre></div>
+<p><strong>Expected:</strong> <code>hello-from-Windows</code>. Change the file on your laptop and rerun the read command to see the new content. The <code>readonly</code> option prevents this container from modifying the folder.</p>
+<div class="callout"><p><strong>Path matters.</strong> With <code>--mount type=bind</code>, create the source folder first; missing sources fail by default. A bind mount hides any image files already at its destination. For a remote Docker daemon, the source path must exist on that remote host.</p></div>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/bind-mounts/">Docker bind mounts</a> and <a href="https://networkdirection.net/articles/containers/docker-storage/">the supplied volumes-versus-bind-mounts guide</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-bind-options" style="--accent:#a21caf;--tint:#fdf4ff">
+<p class="kicker">Topic 10 · 08 · Bind-mount options</p><h2>Read the mount specification</h2>
+<p>After the previous lab creates <code>$storageDemoPath</code>, these commands read the same file using two supported forms.</p>
+<div class="codebox"><div class="code-label">PowerShell · explicit mount fields</div><pre>docker run --rm --mount "type=bind,src=$storageDemoPath,dst=/workspace,readonly" alpine:3.22 cat /workspace/message.txt</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · shorter volume syntax</div><pre>docker run --rm -v "${storageDemoPath}:/workspace:ro" alpine:3.22 cat /workspace/message.txt</pre></div>
+<div class="table-scroll"><table><thead><tr><th>Part</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>src</code> / <code>source</code></td><td>Path on the Docker host, shared by Docker Desktop for this lab.</td></tr>
+<tr><td><code>dst</code> / <code>target</code> / <code>destination</code></td><td>Absolute path inside the container.</td></tr>
+<tr><td><code>readonly</code> / <code>ro</code></td><td>Prevents writes through this mount. Host edits remain visible.</td></tr>
+</tbody></table></div>
+<div class="callout"><p><strong>Missing source:</strong> <code>--mount</code> fails by default. <code>-v</code> creates a directory when permitted, even if you intended a file. Current Docker also supports explicit <code>bind-create-src</code> with <code>--mount</code>. Pre-creating the path makes the demo’s intent clear.</p></div>
+<p class="source">Source: <a href="https://docs.docker.com/engine/storage/bind-mounts/">Docker bind-mount syntax and constraints</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-tmpfs" style="--accent:#0369a1;--tint:#f0f9ff">
+<p class="kicker">Topic 10 · 09 · tmpfs</p><h2>Keep temporary work temporary</h2>
+<p>A <strong>tmpfs</strong> mount uses Linux host memory for working files. Its contents disappear when the container stops. On Docker Desktop in Linux mode, this is memory in the Linux environment.</p>
+<div class="codebox"><div class="code-label">PowerShell · create a 16 MiB temporary mount</div><pre>docker run -d --name storage-tmpfs-demo --mount type=tmpfs,dst=/scratch,tmpfs-size=16777216 alpine:3.22 sleep 86400
+docker exec storage-tmpfs-demo sh -c "echo temporary > /scratch/work.txt"
+docker exec storage-tmpfs-demo cat /scratch/work.txt</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · restart and look again</div><pre>docker stop storage-tmpfs-demo
+docker start storage-tmpfs-demo
+docker exec storage-tmpfs-demo ls -A /scratch</pre></div>
+<p><strong>Expected:</strong> the first read prints <code>temporary</code>. After restart, the directory listing is empty.</p>
+<div class="grid"><div class="mini"><h3>Good use</h3><p>Re-creatable intermediate files, temporary calculations, and disposable cache entries.</p></div><div class="mini"><h3>Limits</h3><p>Memory usage counts toward container memory limits. Linux can swap tmpfs pages to disk. This is not a guarantee that secrets never reach disk.</p></div></div>
+<p class="source">Behavior and options: <a href="https://docs.docker.com/engine/storage/tmpfs/">Docker tmpfs documentation</a>. The supplied <a href="https://www.geeksforgeeks.org/cloud-computing/data-storage-in-docker/">storage overview</a> also introduces this mount type.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-image-mounts" style="--accent:#075985;--tint:#e0f2fe">
+<p class="kicker">Topic 10 · 10 · Image mounts</p><h2>Use files from a second image</h2>
+<p>An image mount exposes files from another image. It is read-only, useful for packaged assets or compatible tools.</p>
+<figure class="storage-image-map" aria-labelledby="storage-image-caption">
+<div class="storage-image-source"><strong>Source image</strong><span>ubuntu:24.04</span><small>Local image files</small></div>
+<div class="storage-image-connector"><span>read-only mount</span><b aria-hidden="true">→</b></div>
+<div class="storage-image-target"><strong>Running Alpine container</strong><div><span>Own filesystem</span><code>/etc/os-release → Alpine</code></div><div><span>Mounted image filesystem</span><code>/image-files/etc/os-release → Ubuntu</code></div></div>
+<figcaption id="storage-image-caption">Ubuntu files are read inside Alpine. No second container or kernel starts.</figcaption>
+</figure>
+<ul class="storage-points"><li>Requires containerd’s image store; pull the source image first.</li><li>Use <code>--mount type=image</code>; <code>-v</code> has no equivalent.</li><li>The mount hides destination files; <code>image-subpath</code> selects a source directory.</li></ul>
+<p>Mounted binaries still need compatible libraries. Our lab reads data files.</p>
+<p class="source">Source: <a href="https://docs.docker.com/engine/storage/image-mounts/">Docker image-mount documentation</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-image-demo" style="--accent:#0e6877;--tint:#ecfeff">
+<p class="kicker">Topic 10 · 11 · Image-mount demo</p><h2>Inspect a read-only image mount</h2>
+<p>Use the <a href="#storage-containerd">image-store check</a> before this optional lab.</p>
+<div class="codebox"><div class="code-label">PowerShell · pull, mount, and read</div><pre>docker pull ubuntu:24.04
+docker run -d --name storage-image-demo --mount type=image,src=ubuntu:24.04,dst=/image-files alpine:3.22 sleep 86400
+docker exec storage-image-demo cat /image-files/etc/os-release
+docker inspect storage-image-demo --format '{{json .Mounts}}'</pre></div>
+<p><strong>Expected:</strong> Ubuntu distribution information; inspection includes <code>"Type":"image"</code> and <code>"RW":false</code>.</p>
+<div class="codebox"><div class="code-label">PowerShell · intentionally attempt a blocked write</div><pre>docker exec storage-image-demo sh -c "echo blocked > /image-files/course-test.txt"</pre></div>
+<p><strong>Expected failure:</strong> a read-only-filesystem error. Keep the container for the inspection lesson; remove it during cleanup.</p>
+<p class="source">Example adapted from <a href="https://docs.docker.com/engine/storage/image-mounts/#use-an-image-mount-in-a-container">Docker’s image-mount example</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-backends" style="--accent:#b54725;--tint:#fff1e8">
+<p class="kicker">Topic 10 · 12 · Storage backends</p><h2>What does a storage driver manage?</h2>
+<div class="grid"><div class="mini"><h3>Image and container layers</h3><p>Classic storage drivers manage image layers and each container’s writable layer. The containerd image store uses snapshotters for this job.</p></div><div class="mini"><h3>Mounted application data</h3><p>Volume drivers provide storage outside that layer stack. For example, <code>local</code> manages the named volume used in our lab.</p></div></div>
+<div class="table-scroll"><table><caption>Classic drivers you may encounter</caption><thead><tr><th>Name</th><th>Context</th></tr></thead><tbody>
+<tr><td><code>overlay2</code></td><td>Widely compatible classic Linux driver.</td></tr>
+<tr><td><code>btrfs</code> / <code>zfs</code></td><td>Require matching filesystem setup and additional maintenance.</td></tr>
+<tr><td><code>vfs</code></td><td>Testing and special compatibility cases; costly copying.</td></tr>
+<tr><td><code>windowsfilter</code></td><td>Native Windows container layer storage.</td></tr>
+</tbody></table></div>
+<div class="codebox"><div class="code-label">PowerShell · inspect backend and usage</div><pre>docker info
+docker ps --size
+docker system df -v</pre></div>
+<p>Copy-on-write can add overhead to layer writes. Prefer volumes for persistent, write-heavy data. The writable-layer size from <code>docker ps --size</code> excludes volume data; shared image layers must not be counted once per container when estimating total usage.</p>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/drivers/">storage drivers and layer sizes</a>, <a href="https://docs.docker.com/engine/storage/drivers/select-storage-driver/">driver selection</a>, and <a href="#storage-containerd">the current image store</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-containerd" style="--accent:#6b4f9e;--tint:#f5f0ff">
+<p class="kicker">Topic 10 · 13 · containerd image store</p><h2>Check which image store you use</h2>
+<p>Fresh Docker Engine 29.0+ installations default to containerd’s image store. Upgraded systems can retain classic drivers. Current Docker Desktop also defaults to containerd.</p>
+<div class="codebox"><div class="code-label">PowerShell · inspect the server and image store</div><pre>docker version
+docker info --format '{{.DriverStatus}}'</pre></div>
+<p>Look for <code>io.containerd.snapshotter.v1</code> in the driver status. Engine normally uses the <code>overlayfs</code> snapshotter. This check is separate from a volume reporting <code>Driver: local</code>.</p>
+<div class="grid"><div class="mini"><h3>Capabilities</h3><p>Multi-platform images, attestations, alternative snapshotters, and the image mounts used in this topic.</p></div><div class="mini"><h3>Disk usage</h3><p>Compressed image content and unpacked snapshots both occupy disk. Engine’s containerd data directory is separate from Docker’s data directory.</p></div></div>
+<details><summary>Docker Desktop · locate the setting</summary><p>Open Settings → General → <strong>Use containerd for pulling and storing images</strong>. Apply a change only when you intend to switch stores. Images and containers in the inactive store remain on disk but are hidden until you switch back.</p></details>
+<details><summary>Standalone Engine · configuration reference</summary><p>The official Engine guide documents <code>features.containerd-snapshotter</code> in the daemon configuration. Plan the switch and preserve needed images first. Docker Desktop’s setting is the relevant control for these Windows 11 lessons.</p></details>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/containerd/">containerd image store in Engine</a> and <a href="https://docs.docker.com/desktop/features/containerd/">the Docker Desktop setting</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-windows" style="--accent:#4338ca;--tint:#eef2ff">
+<p class="kicker">Topic 10 · 14 · Know your Docker host</p><h2>Windows laptop, Linux storage</h2>
+<div class="codebox"><div class="code-label">PowerShell · check the container operating-system mode</div><pre>docker info --format '{{.OSType}}'</pre></div>
+<p>The classroom labs expect <code>linux</code>. Your terminal is PowerShell, while Alpine, its paths, and its mounts run in Docker Desktop’s Linux environment.</p>
+<figure class="storage-platform"><div><strong>Windows 11 laptop</strong><span>PowerShell + your bind-mounted practice folder</span><div><strong>Docker Desktop Linux environment</strong><span>Docker Engine + Linux filesystem + named volumes</span><div><strong>Alpine container</strong><span>/data · /workspace · /scratch</span></div></div></div><figcaption>Nested boxes show the environments. Docker Desktop makes selected Windows folders available through bind mounts.</figcaption></figure>
+<details><summary>What changes for native Windows containers?</summary><p>The supplied Microsoft articles describe Windows container scratch space, image layers, bind mounts, and named volumes. Windows layer storage requires NTFS. Mount access depends on the container’s isolation mode and Windows permissions. Use compatible Windows images and paths such as <code>C:\data</code>. The Alpine and Linux tmpfs labs do not apply in that mode.</p></details>
+<p>A Linux volume’s inspected mount path belongs to Docker Desktop’s Linux environment. Use Docker’s volume tools or a helper container to access it. Internal Desktop disk paths vary with installation and version.</p>
+<p class="source">See <a href="https://docs.docker.com/desktop/features/wsl/">Docker Desktop’s WSL 2 backend</a>, Microsoft’s <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-storage">Windows container storage</a> and <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/persistent-storage">persistent storage</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-backup" style="--accent:#0e7490;--tint:#ecfeff">
+<p class="kicker">Topic 10 · 15 · Backup and restore</p><h2>Persistence is only the first step</h2>
+<p>This lab copies the text-file volume to an archive, then restores into a <strong>new, empty volume</strong>. Use a fresh backup folder and restore-volume name when repeating it.</p>
+<div class="codebox"><div class="code-label">PowerShell · archive the demo data</div><pre>New-Item -ItemType Directory -Path .\docker-storage-backup -Force | Out-Null
+$storageBackupPath = (Resolve-Path .\docker-storage-backup).Path
+docker run --rm --mount type=volume,src=course-storage-data,dst=/data,readonly --mount "type=bind,src=$storageBackupPath,dst=/backup" alpine:3.22 tar -czf /backup/course-data.tar.gz -C /data .</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · restore and verify</div><pre>docker volume create course-storage-restored
+docker run --rm --mount type=volume,src=course-storage-restored,dst=/data --mount "type=bind,src=$storageBackupPath,dst=/backup,readonly" alpine:3.22 tar -xzf /backup/course-data.tar.gz -C /data
+docker run --rm --mount type=volume,src=course-storage-restored,dst=/data,readonly alpine:3.22 cat /data/message.txt</pre></div>
+<p><strong>Expected:</strong> <code>hello-from-volume</code>. The archive contains the data. <code>docker volume create</code> alone only creates an empty storage location.</p>
+<div class="callout"><p>For a real database, use its supported backup method or stop/quiesce writes before copying files. Store backups outside the Docker host and verify restoration. A second local volume alone cannot protect against host failure.</p></div>
+<p class="source">Adapted for this PowerShell lab from <a href="https://docs.docker.com/engine/storage/volumes/#back-up-restore-or-migrate-data-volumes">Docker’s backup and restore procedure</a>. The supplied <a href="https://medium.com/@vinoji2005/day-28-exploring-docker-storage-eddefeefb23d">Medium reading</a> introduces backup and migration.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-troubleshooting" style="--accent:#a16207;--tint:#fefce8">
+<p class="kicker">Topic 10 · 16 · Troubleshooting</p><h2>Check the destination first</h2>
+<div class="codebox"><div class="code-label">PowerShell · inspect the lab resources</div><pre>docker inspect storage-layer-demo --format '{{json .Mounts}}'
+docker diff storage-layer-demo
+docker volume ls
+docker volume inspect course-storage-data
+docker system df -v</pre></div>
+<p>The layer demo should have no user-configured data mounts. <code>docker diff</code> reports filesystem changes, including the message file. <code>system df -v</code> helps separate image, container, cache, and volume usage.</p>
+<div class="table-scroll"><table><thead><tr><th>Symptom</th><th>What to check</th></tr></thead><tbody>
+<tr><td>A replacement container sees no data</td><td>Reuse the exact volume name and the app’s actual data-directory destination.</td></tr>
+<tr><td>Image files seem missing after mounting</td><td>A mount hides existing contents at its destination. An empty volume can initially copy image contents there unless <code>volume-nocopy</code> is set.</td></tr>
+<tr><td>“Bind source path does not exist”</td><td>Create and resolve the source folder. Confirm which Docker host the command targets.</td></tr>
+<tr><td>Permission denied / read-only filesystem</td><td>Check the mount’s read-only setting and the application user’s permissions.</td></tr>
+<tr><td>Image mount reports a missing image</td><td>Pull its source image on the selected Docker host before creating the mount.</td></tr>
+<tr><td>Image mount type is unsupported</td><td>Check Docker version and the <a href="#storage-containerd">containerd image store</a>. Classic drivers cannot provide image mounts.</td></tr>
+</tbody></table></div>
+<p>If you completed the image-mount lab, inspect <code>storage-image-demo</code> to compare its <code>Mounts</code> with the unmounted layer demo.</p>
+<p class="source">See <a href="https://docs.docker.com/engine/storage/image-mounts/">image-mount constraints</a>, <a href="https://docs.docker.com/engine/storage/volumes/#mounting-a-volume-over-existing-data">mounting over existing data</a>, <a href="https://docs.docker.com/reference/cli/docker/container/diff/">docker diff</a>, and <a href="https://docs.docker.com/reference/cli/docker/system/df/">disk usage</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-cleanup" style="--accent:#be185d;--tint:#fdf2f8">
+<p class="kicker">Topic 10 · 17 · Cleanup</p><h2>Delete only the data you mean to delete</h2>
+<p>Run each group only if you completed its lab. The volume-removal command below <strong>permanently deletes the two practice volumes and their files</strong>. Keep or back up anything you need first.</p>
+<div class="codebox"><div class="code-label">PowerShell · remove the writable-layer demo</div><pre>docker stop storage-layer-demo
+docker rm storage-layer-demo</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · remove the tmpfs demo</div><pre>docker stop storage-tmpfs-demo
+docker rm storage-tmpfs-demo</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · remove the optional image-mount demo</div><pre>docker stop storage-image-demo
+docker rm storage-image-demo</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · delete the practice volumes when finished</div><pre>docker volume rm course-storage-data course-storage-restored</pre></div>
+<p>The <code>--rm</code> helpers already removed themselves. Pulled images stay cached after these containers are removed. Your Windows practice folder and backup archive remain. Review them in File Explorer before deleting them.</p>
+<details><summary>Why avoid a broad prune during the lesson?</summary><p>Current <code>docker volume prune</code> removes unused anonymous local volumes. Adding <code>--all</code> includes unused named volumes. “Unused” means no container references the volume; it does not mean the data is unimportant. Targeted removal keeps this exercise’s cleanup easy to review.</p></details>
+<p class="source">See <a href="https://docs.docker.com/reference/cli/docker/volume/rm/">remove a volume</a> and <a href="https://docs.docker.com/reference/cli/docker/volume/prune/">current volume-prune scope</a>.</p>
+      </section>
+
+      <section class="topic storage-topic" id="storage-review" style="--accent:#475569;--tint:#f1f5f9">
+<p class="kicker">Topic 10 · 18 · Review</p><h2>Choose where the data should live</h2>
+<details><summary>A database container will be replaced. Where should its data go?</summary><p>Mount a named volume at the database’s real data directory. Attach the same volume to the replacement, follow the database’s upgrade rules, and maintain backups.</p></details>
+<details><summary>You want to edit source files on your laptop. Which mount fits?</summary><p>A bind mount exposes your chosen host folder. Use read-only access when the container only needs to read the files.</p></details>
+<details><summary>Does a named volume automatically become part of a pushed image?</summary><p>No. Image distribution and volume data are separate. Back up and transfer data separately when moving the application.</p></details>
+<details><summary>Can an image mount store a database’s new records?</summary><p>No. Image mounts are read-only. Choose a writable persistent volume for database files.</p></details>
+<details><summary>Does “five mount types” include overlay2?</summary><p>No. The mount categories are volumes, bind mounts, tmpfs, image mounts, and named pipes. <code>overlay2</code> is a classic storage driver for image and writable layers.</p></details>
+<details open><summary>Official Docker references · six core pages</summary><ul class="storage-readings"><li><a href="https://docs.docker.com/engine/storage/">Storage overview</a> · mount categories and data lifetimes.</li>
+<li><a href="https://docs.docker.com/engine/storage/volumes/">Volumes</a> · lifecycle, population, sharing, and backups.</li>
+<li><a href="https://docs.docker.com/engine/storage/bind-mounts/">Bind mounts</a> · host paths, syntax, and permissions.</li>
+<li><a href="https://docs.docker.com/engine/storage/image-mounts/">Image mounts</a> · read-only images, prerequisites, and examples.</li>
+<li><a href="https://docs.docker.com/engine/storage/drivers/">Storage drivers</a> · layers, copy-on-write, and disk usage.</li>
+<li><a href="https://docs.docker.com/engine/storage/containerd/">containerd image store</a> · snapshotters, defaults, and migration considerations.</li></ul></details>
+<details><summary>Earlier reading list · eight supplied sources</summary>
+<ul class="storage-readings">
+<li><a href="https://www.computerweekly.com/feature/Docker-storage-101-How-storage-works-in-Docker">Computer Weekly — Docker storage 101</a> · historical background on layers and persistence.</li>
+<li><a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/container-storage">Microsoft — Windows container storage overview</a> · native Windows layer and scratch storage.</li>
+<li><a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/persistent-storage">Microsoft — persistent storage</a> · Windows volumes, bind mounts, and permissions.</li>
+<li><a href="https://dev.to/meghasharmaaaa/docker-storage-drivers-4a75">Megha Sharma — Docker storage drivers</a> · image layers and classic drivers.</li>
+<li><a href="https://iamachs.com/blog/docker/part-5-understanding-docker-storage-and-volumes">Ahmed Muhi — Docker storage and volumes</a> · separating container and data lifecycles.</li>
+<li><a href="https://networkdirection.net/articles/containers/docker-storage/">Network Direction — Docker storage</a> · volumes and bind mounts.</li>
+<li><a href="https://medium.com/@vinoji2005/day-28-exploring-docker-storage-eddefeefb23d">Vinoth Subbiah — Exploring Docker Storage</a> · storage, backup, and migration concepts.</li>
+<li><a href="https://www.geeksforgeeks.org/cloud-computing/data-storage-in-docker/">GeeksforGeeks — Data storage in Docker</a> · a comparison of mount types.</li>
+</ul><p>Use these as background readings. The linked Docker references govern the commands, lifecycle behavior, backend versions, and cleanup scope taught here.</p></details>
+<p class="source">Continue reviewing <a href="https://docs.docker.com/engine/storage/">Docker storage</a>, <a href="https://docs.docker.com/engine/storage/volumes/">volumes</a>, <a href="https://docs.docker.com/engine/storage/bind-mounts/">bind mounts</a>, and <a href="https://docs.docker.com/engine/storage/tmpfs/">tmpfs</a>.</p>
       </section>
     </main>
   </div>
