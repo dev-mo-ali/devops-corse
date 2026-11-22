@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Topic 7 — Basic Docker commands with a guided Nginx exercise, lifecycle diagram, image builds, networks, volumes, and cleanup.">
+  <title>Basic Docker Commands — Topic 7</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:light;--bg:#f5f8fc;--ink:#14263b;--muted:#5c6e82;--line:#dfe7f0}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "DM Sans",system-ui,sans-serif}h1,h2,h3,.brand{font-family:"Space Grotesk",system-ui,sans-serif;line-height:1.15}a{color:#135cb0}a:focus-visible{outline:3px solid #135cb0;outline-offset:3px;border-radius:3px}.skip{position:absolute;top:-60px;left:12px;padding:9px 14px;background:#fff;z-index:5}.skip:focus{top:12px}
+    .topbar{min-height:70px;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;font-weight:700;letter-spacing:.02em}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#e8f4ff;color:#0877c9;font-size:20px}.brand small{display:block;color:var(--muted);font:11px "DM Sans",sans-serif;letter-spacing:.08em}.topbar nav{display:flex;gap:18px;font-size:13px;font-weight:700}.topbar nav a{text-decoration:none}
+    .shell{max-width:1440px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--line);min-height:calc(100vh - 70px);padding:28px 14px 32px}.sidebar-label{padding:0 12px;color:#91a0ae;font-size:11px;font-weight:800;letter-spacing:.12em}.sidebar nav{display:grid;gap:5px}.sidebar a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#4d6074;text-decoration:none;font-size:13px;font-weight:700}.sidebar a:hover,.sidebar a:focus-visible{background:#f2f6fa}.nav-dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--dot)}
+    main{min-width:0;padding:44px clamp(20px,5vw,72px) 78px}.intro{max-width:960px;margin-bottom:32px}.eyebrow{margin:0 0 11px;color:#0877c9;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em}.lead{max-width:780px;color:var(--muted);font-size:clamp(18px,2vw,22px);margin:0 0 20px}.path{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#45627c;font-size:13px;font-weight:700}.path span{padding:6px 10px;border-radius:999px;background:#e8f4ff}.path b{color:#8aa1b5}
+    .topic{--accent:#1d4ed8;--tint:#eef4ff;max-width:1000px;margin:0 0 25px;padding:clamp(22px,3vw,34px);background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:18px;box-shadow:0 8px 25px #14263b08;scroll-margin-top:18px}.topic.data-center{--accent:#0f766e;--tint:#e8f8f4}.topic.vm{--accent:#7041b5;--tint:#f2ecfc}.topic.types{--accent:#bc5d16;--tint:#fff2e5}.topic.works{--accent:#087aaf;--tint:#e8f7fd}.topic.tradeoffs{--accent:#537a20;--tint:#f1f7e7}.kicker{display:inline-block;margin:0 0 10px;padding:5px 10px;border-radius:999px;background:var(--tint);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.topic h2{margin:0 0 14px;font-size:clamp(28px,3vw,38px);letter-spacing:-.035em}.topic h3{font-size:19px;margin:0 0 8px}.topic p{max-width:900px;margin:0 0 16px}.topic p:last-child{margin-bottom:0}.topic strong{color:var(--ink)}.topic code{padding:2px 5px;border-radius:4px;background:var(--tint);color:var(--accent);font-size:.9em}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:19px 0}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.mini{padding:18px;border:1px solid var(--line);border-radius:13px;background:#fcfdff}.mini p{margin:0;color:var(--muted);font-size:14px}.mini-label{display:block;margin-bottom:8px;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.11em}.callout{padding:15px 18px;margin:18px 0;background:var(--tint);border-left:4px solid var(--accent);border-radius:0 11px 11px 0}.callout p{margin:0}.diagram{overflow-x:auto;margin:23px 0;padding:15px;border:1px solid var(--line);border-radius:15px;background:var(--tint)}.diagram svg{display:block;width:100%;min-width:620px;height:auto}.diagram figcaption{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}.steps{counter-reset:step;list-style:none;padding:0;margin:19px 0;display:grid;gap:10px}.steps li{position:relative;padding:12px 14px 12px 51px;border:1px solid var(--line);border-radius:11px;background:#fcfdff}.steps li:before{counter-increment:step;content:counter(step);position:absolute;left:13px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:var(--tint);color:var(--accent);font-size:12px;font-weight:800}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}.list-card{padding:19px;border-radius:14px;border:1px solid var(--line);background:#fcfdff}.list-card.good{border-top:4px solid #23804a}.list-card.caution{border-top:4px solid #b84c44}.list-card ul{margin:10px 0 0;padding-left:21px}.list-card li{margin:8px 0}.source{margin-top:19px!important;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.source a{font-weight:700}.finish{max-width:1000px;padding:14px 4px;color:var(--muted);font-size:13px}
+    .sidebar-label:not(:first-child){margin-top:24px}.module-intro{max-width:1000px;margin:50px 0 26px;padding:28px 30px;border-radius:18px;background:#14263b;color:#fff;scroll-margin-top:18px}.module-intro .eyebrow{color:#86d3ff}.module-intro h2{font-size:clamp(30px,4vw,48px);letter-spacing:-.04em;margin:0 0 12px}.module-intro p:last-child{margin:0;color:#cedceb;max-width:790px}.topic.process{--accent:#a64d09;--tint:#fff2e6}.topic.daemon{--accent:#ae2253;--tint:#fff0f5}.topic.service{--accent:#4f46ad;--tint:#f1f0ff}.topic.namespace{--accent:#0e7490;--tint:#e8f8fd}.topic.cgroups{--accent:#7e35a5;--tint:#f8edff}.topic.connection{--accent:#24733f;--tint:#eaf8ef}.codebox{margin:16px 0 20px;overflow:hidden;border-radius:12px;background:#17283d;color:#eaf4ff}.codebox pre{margin:0;padding:15px 18px;overflow-x:auto;font:13px/1.6 Consolas,"Courier New",monospace}.code-label{padding:7px 16px;background:#25415e;color:#c7d9e9;font-size:10px;font-weight:800;letter-spacing:.08em}.topic table{width:100%;border-collapse:collapse;font-size:14px}.topic th,.topic td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.topic th{background:var(--tint)}.table-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:12px}.topic tr:last-child td{border-bottom:0}
+    @media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:3;min-height:0;padding:7px 10px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.sidebar-label{display:none}.sidebar nav{display:flex;gap:4px;width:max-content}.sidebar a{white-space:nowrap;padding:8px 10px}main{padding:30px 19px 60px}}
+    @media(max-width:850px){.sidebar{display:flex;align-items:center;gap:10px}.sidebar nav{flex:none}.sidebar nav:not(:last-child){border-right:1px solid var(--line);padding-right:10px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  
+    #topic-7 { margin-top: 0; background: #433159; }
+    #topic-7 .eyebrow { color: #e4c8ff; }
+    #topic-7 h1 { font-size: clamp(36px,4.5vw,56px); }
+    .lesson-map { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; }
+    .lesson-map a { padding: 7px 11px; color: #fff; border: 1px solid #907aa7; border-radius: 8px; font-size: 13px; text-decoration: none; }
+    .topic { scroll-margin-top: 65px; }
+    .topic .codebox pre { color: #eaf4ff; }
+    .topic details { padding: 14px 16px; margin: 18px 0; background: var(--tint); border-radius: 12px; }
+    .topic summary { font-weight: 700; cursor: pointer; }
+    .topic details[open] summary { margin-bottom: 12px; }
+    .topic summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+    .lifecycle { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 22px 0; padding: 18px; border-radius: 12px; background: var(--tint); }
+    .lifecycle div { flex: 1 1 120px; padding: 14px; border: 1px solid var(--accent); border-radius: 10px; background: #fff; text-align: center; }
+    .lifecycle strong, .lifecycle span { display: block; }
+    .lifecycle span, .lifecycle figcaption { font-size: 13px; color: var(--muted); }
+    .lifecycle b { color: var(--accent); font-size: 13px; }
+    .lifecycle figcaption { flex-basis: 100%; }
+    @media(max-width:600px) { .lifecycle { flex-direction: column; align-items: stretch; } .lifecycle div { flex: auto; } .lifecycle b { text-align: center; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header class="topbar">
+    <a class="brand" href="docker.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPIC 07 · BASIC COMMANDS</small></span></a>
+    <nav aria-label="Course links"><a href="docker.html#course-topics">Docker course</a><a href="index.html">All courses</a></nav>
+  </header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Lesson navigation">
+      <p class="sidebar-label">TOPIC 07 · BASIC COMMANDS</p>
+      <nav aria-label="Topic 7 sections">
+        <a href="#topic-7" style="--dot:#75508c"><span class="nav-dot"></span>Lesson overview</a>
+        <a href="#command-basics" style="--dot:#315fa8"><span class="nav-dot"></span>Getting started</a>
+        <a href="#images-run" style="--dot:#087b70"><span class="nav-dot"></span>Images and running containers</a>
+        <a href="#inspect-container" style="--dot:#805092"><span class="nav-dot"></span>Inspect and enter</a>
+        <a href="#container-lifecycle" style="--dot:#b65825"><span class="nav-dot"></span>Container lifecycle</a>
+        <a href="#build-share" style="--dot:#99541e"><span class="nav-dot"></span>Build and share</a>
+        <a href="#networks-volumes" style="--dot:#426c2a"><span class="nav-dot"></span>Networks and volumes</a>
+        <a href="#cleanup-reference" style="--dot:#ad3c61"><span class="nav-dot"></span>Cleanup and quick reference</a>
+      </nav>
+    </aside>
+    <main id="main">
+      <header class="module-intro" id="topic-7">
+        <p class="eyebrow">Docker foundations · Topic 07</p>
+        <h1>Basic Docker commands</h1>
+        <p>Put the architecture into practice. Run a web container, inspect it, manage its lifecycle, then build your own image. Examples use PowerShell on Windows 11 and Docker Desktop with Linux containers.</p>
+        <nav class="lesson-map" aria-label="Lesson contents">
+          <a href="#command-basics">Getting started</a>
+          <a href="#images-run">Images and running containers</a>
+          <a href="#inspect-container">Inspect and enter</a>
+          <a href="#container-lifecycle">Container lifecycle</a>
+          <a href="#build-share">Build and share</a>
+          <a href="#networks-volumes">Networks and volumes</a>
+          <a href="#cleanup-reference">Cleanup and quick reference</a>
+        </nav>
+      </header>
+      <section class="topic" id="command-basics" style="--accent:#315fa8;--tint:#edf4ff">
+        <p class="kicker">Section 1 · Getting started</p>
+        <h2>Read and check a Docker command</h2>
+<p>Open PowerShell with Docker Desktop running in Linux container mode. Work through the lesson in order. The exercise uses <code>commands-web</code> and port <code>8081</code> so it can run alongside the Topic 5 demo.</p>
+<div class="codebox"><div class="code-label">PowerShell · check the installation</div><pre>docker --version
+docker version
+docker info
+docker run --help</pre></div>
+<p><code>--version</code> reports the CLI version. <code>docker version</code> includes client and server details, while <code>docker info</code> describes the selected Engine. If server details fail, check Docker Desktop and the selected connection with <code>docker context ls</code>.</p>
+<div class="callout"><p><strong>Command structure.</strong> <code>docker run [OPTIONS] IMAGE [COMMAND]</code> places options before the image. <code>docker run</code> and <code>docker container run</code> are equivalent. <code>docker ps</code> is the short form of <code>docker container ls</code>.</p></div>
+<p class="source">Read <a href="https://www.datacamp.com/blog/docker-commands">DataCamp’s Docker commands guide</a> and the <a href="https://docs.docker.com/reference/cli/docker/">Docker CLI reference</a>.</p>
+      </section>
+
+      <section class="topic" id="images-run" style="--accent:#087b70;--tint:#e8f8f3">
+        <p class="kicker">Section 2 · Images and running containers</p>
+        <h2>Pull an image and run Nginx</h2>
+<div class="codebox"><div class="code-label">PowerShell · run once to create the container</div><pre>docker pull nginx:alpine
+docker image ls
+docker run -d --name commands-web -p 127.0.0.1:8081:80 nginx:alpine
+docker ps</pre></div>
+<p>Open <a href="http://127.0.0.1:8081" target="_blank" rel="noopener">the local Nginx page</a>. You should see its welcome page. The run command prints a container ID, and <code>docker ps</code> should include <code>commands-web</code>.</p>
+<div class="table-scroll"><table><thead><tr><th>Part</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>-d</code></td><td>Run in the background and return to PowerShell.</td></tr>
+<tr><td><code>--name commands-web</code></td><td>Assign a name for later commands.</td></tr>
+<tr><td><code>-p 127.0.0.1:8081:80</code></td><td>Publish container port 80 on the laptop’s loopback address at port 8081.</td></tr>
+<tr><td><code>nginx:alpine</code></td><td>Select the Nginx repository and its alpine tag.</td></tr>
+</tbody></table></div>
+<p><code>pull</code> downloads an image. <code>run</code> creates a new container and starts it, pulling a missing image under the default policy. If the name already exists, inspect it with <code>docker ps -a</code> and use <code>docker start commands-web</code> to start that stopped container.</p>
+<p class="source">See the <a href="https://docs.docker.com/reference/cli/docker/container/run/">docker run reference</a> and <a href="https://www.geeksforgeeks.org/devops/docker-instruction-commands/">GeeksforGeeks command examples</a>.</p>
+      </section>
+
+      <section class="topic" id="inspect-container" style="--accent:#805092;--tint:#f6edf9">
+        <p class="kicker">Section 3 · Inspect and enter</p>
+        <h2>Find out what the container is doing</h2>
+<div class="codebox"><div class="code-label">PowerShell · while commands-web is running</div><pre>docker ps -a
+docker logs --tail 20 commands-web
+docker inspect commands-web
+docker port commands-web
+docker stats --no-stream commands-web</pre></div>
+<p><code>ps -a</code> includes stopped containers. <code>logs</code> reads captured output, <code>inspect</code> returns detailed metadata, <code>port</code> lists published ports, and <code>stats --no-stream</code> gives one resource-usage snapshot. Refresh the web page before reading the logs to generate a request.</p>
+<p>Use <code>docker logs -f commands-web</code> to follow new output. Press <kbd>Ctrl</kbd> + <kbd>C</kbd> to stop following the logs.</p>
+<div class="codebox"><div class="code-label">PowerShell · open a shell in the running container</div><pre>docker exec -it commands-web sh</pre></div>
+<div class="codebox"><div class="code-label">Inside the container shell</div><pre>ls /usr/share/nginx/html
+exit</pre></div>
+<p><code>exec</code> starts an additional command in an existing running container. <code>-i</code> keeps input open and <code>-t</code> allocates a terminal. This Alpine image includes <code>sh</code>. Exiting this extra shell leaves Nginx running.</p>
+<p class="source">See <a href="https://docs.docker.com/reference/cli/docker/container/exec/">Docker’s exec reference</a> and <a href="https://medium.com/@ravipatel.it/mastering-docker-top-50-important-commands-explained-with-examples-98bcf77e0169">Ravi Patel’s command examples</a>.</p>
+      </section>
+
+      <section class="topic" id="container-lifecycle" style="--accent:#b65825;--tint:#fff2e9">
+        <p class="kicker">Section 4 · Container lifecycle</p>
+        <h2>Stop, start, and restart</h2>
+<figure class="lifecycle" aria-label="Container lifecycle">
+<div><strong>Image</strong><span>nginx:alpine</span></div><b>run →</b>
+<div><strong>Running</strong><span>commands-web</span></div><b>stop →</b>
+<div><strong>Stopped</strong><span>Same container ID</span></div>
+<figcaption><code>start</code> takes the stopped container back to running. <code>restart</code> stops and starts it. <code>rm</code> removes the stopped container.</figcaption>
+</figure>
+<div class="codebox"><div class="code-label">PowerShell · observe each state</div><pre>docker stop commands-web
+docker ps
+docker ps -a
+docker start commands-web
+docker restart commands-web</pre></div>
+<p>After <code>stop</code>, the web page is unavailable and the container appears in <code>ps -a</code>. After <code>start</code>, refresh the browser. The container retains its ID, configuration, and writable layer across these operations.</p>
+<details><summary>Why does a second docker run report a name conflict?</summary><p>A stopped container still owns its name. Starting it reuses that container. Creating another container requires a different name or removal of the existing one.</p></details>
+<p class="source">See <a href="https://www.geeksforgeeks.org/devops/docker-instruction-commands/">GeeksforGeeks lifecycle commands</a> and <a href="https://docs.docker.com/reference/cli/docker/container/run/">Docker’s run and start behavior</a>.</p>
+      </section>
+
+      <section class="topic" id="build-share" style="--accent:#99541e;--tint:#fff2e6">
+        <p class="kicker">Section 5 · Build and share</p>
+        <h2>Build an image of your own</h2>
+<p>Create a practice folder containing these two files. Open PowerShell in that folder.</p>
+<div class="codebox"><div class="code-label">index.html</div><pre>&lt;h1&gt;Hello from Topic 7&lt;/h1&gt;</pre></div>
+<div class="codebox"><div class="code-label">Dockerfile · save without a .txt extension</div><pre>FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html</pre></div>
+<div class="codebox"><div class="code-label">PowerShell · build and try the page</div><pre>docker build -t commands-site:1 .
+docker run -d --name commands-site-web -p 127.0.0.1:8082:80 commands-site:1</pre></div>
+<p><code>-t</code> names and tags the built image. The dot selects the current directory as the build context. Visit <a href="http://127.0.0.1:8082" target="_blank" rel="noopener">your custom page</a> to see the greeting.</p>
+<details><summary>Optional · publish an image to Docker Hub</summary>
+<p>Create a <code>commands-site</code> repository in your account. Replace <code>YOUR_USERNAME</code> below with your Docker Hub username before running these commands. Pushing uploads your image to that repository.</p>
+<div class="codebox"><div class="code-label">PowerShell · use your own repository</div><pre>docker login
+docker tag commands-site:1 YOUR_USERNAME/commands-site:1
+docker push YOUR_USERNAME/commands-site:1
+docker logout</pre></div>
+<p><code>tag</code> adds a reference to the local image. <code>push</code> publishes it. A teammate can fetch that reference with <code>docker pull YOUR_USERNAME/commands-site:1</code> if they have access.</p>
+</details>
+<p class="source">See <a href="https://www.coursera.org/collections/docker-cheat-sheet">Coursera’s build and registry cheat sheet</a> and <a href="https://docs.docker.com/reference/">Docker’s reference documentation</a>.</p>
+      </section>
+
+      <section class="topic" id="networks-volumes" style="--accent:#426c2a;--tint:#f0f8e9">
+        <p class="kicker">Section 6 · Networks and volumes</p>
+        <h2>Explore the other Docker objects</h2>
+<p>These commands create an empty practice network and volume. Attaching them to containers is a separate operation.</p>
+<div class="codebox"><div class="code-label">PowerShell · create and inspect</div><pre>docker network create commands-net
+docker network ls
+docker network inspect commands-net
+docker volume create commands-data
+docker volume ls
+docker volume inspect commands-data</pre></div>
+<p>A network connects containers. A named volume stores data independently of a container’s writable layer. <code>inspect</code> shows the configuration of each object. On Docker Desktop, a volume’s mount path belongs to the Linux environment.</p>
+<p class="source">See <a href="https://www.datacamp.com/blog/docker-commands">DataCamp’s network and volume commands</a> and <a href="https://medium.com/@ravipatel.it/mastering-docker-top-50-important-commands-explained-with-examples-98bcf77e0169">Ravi Patel’s command collection</a>.</p>
+      </section>
+
+      <section class="topic" id="cleanup-reference" style="--accent:#ad3c61;--tint:#fff0f5">
+        <p class="kicker">Section 7 · Cleanup and quick reference</p>
+        <h2>Clean up the practice resources</h2>
+<div class="codebox"><div class="code-label">PowerShell · remove the first exercise container</div><pre>docker stop commands-web
+docker rm commands-web
+docker ps -a</pre></div>
+<p><code>rm</code> removes the container and its writable layer. The Nginx image remains available for future containers.</p>
+<div class="codebox"><div class="code-label">If you completed the build, network, and volume exercises</div><pre>docker stop commands-site-web
+docker rm commands-site-web
+docker image rm commands-site:1
+docker network rm commands-net
+docker volume rm commands-data
+docker system df</pre></div>
+<p>Run only the cleanup commands for resources you created. Removing a volume deletes its stored data. If you added a Docker Hub tag, that local reference can be removed with <code>docker image rm YOUR_USERNAME/commands-site:1</code>. <code>system df</code> reports Docker disk usage.</p>
+<details><summary>What does docker system prune remove?</summary><p><code>docker system prune</code> performs a broader cleanup of stopped containers, unused networks, dangling images, and unused build cache. It asks for confirmation. <code>-a</code> extends image cleanup to all unused images, and <code>--volumes</code> includes unused anonymous volumes. Review the scope before confirming.</p></details>
+<div class="table-scroll"><table><thead><tr><th>Goal</th><th>Command pattern</th></tr></thead><tbody>
+<tr><td>Find help</td><td><code>docker COMMAND --help</code></td></tr>
+<tr><td>List images</td><td><code>docker image ls</code> or <code>docker images</code></td></tr>
+<tr><td>List containers</td><td><code>docker ps -a</code></td></tr>
+<tr><td>Create and start</td><td><code>docker run [OPTIONS] IMAGE</code></td></tr>
+<tr><td>Start an existing container</td><td><code>docker start CONTAINER</code></td></tr>
+<tr><td>Read output</td><td><code>docker logs CONTAINER</code></td></tr>
+<tr><td>Run an extra command</td><td><code>docker exec CONTAINER COMMAND</code></td></tr>
+<tr><td>Remove a stopped container</td><td><code>docker rm CONTAINER</code></td></tr>
+<tr><td>Remove a local image reference</td><td><code>docker image rm IMAGE</code> or <code>docker rmi IMAGE</code></td></tr>
+</tbody></table></div>
+<details><summary>Class check · a container is missing from docker ps. What next?</summary><p>Run <code>docker ps -a</code> to include stopped containers, then inspect its logs. Use <code>docker start</code> when you want to start the existing container again.</p></details>
+<p class="source">See <a href="https://docs.docker.com/reference/cli/docker/system/prune/">Docker’s exact prune behavior</a> and the <a href="https://www.coursera.org/collections/docker-cheat-sheet">Coursera quick reference</a>.</p>
+      </section>
+      <footer class="finish"><a href="docker-architecture.html">Previous · Topic 6</a> · <a href="docker.html#course-topics">All Docker topics</a> · <a href="index.html">All courses</a></footer>
+    </main>
+  </div>
+</body>
+</html>
+

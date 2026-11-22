@@ -1,0 +1,374 @@
+/*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, utilities;
+@layer theme {
+  :root, :host {
+    --tw-color-teal-700: oklch(51.1% 0.096 186.391);
+    --tw-color-slate-100: oklch(96.8% 0.007 247.896);
+    --tw-color-slate-200: oklch(92.9% 0.013 255.508);
+    --tw-color-slate-600: oklch(44.6% 0.043 257.281);
+    --tw-color-slate-900: oklch(20.8% 0.042 265.755);
+    --tw-color-white: #fff;
+    --tw-spacing: 0.25rem;
+    --tw-text-sm: 0.875rem;
+    --tw-text-sm--line-height: calc(1.25 / 0.875);
+    --tw-text-xl: 1.25rem;
+    --tw-text-xl--line-height: calc(1.75 / 1.25);
+    --tw-text-3xl: 1.875rem;
+    --tw-text-3xl--line-height: calc(2.25 / 1.875);
+    --tw-font-weight-bold: 700;
+    --tw-radius-lg: 0.5rem;
+    --tw-radius-xl: 0.75rem;
+    --tw-radius-2xl: 1rem;
+  }
+}
+@layer utilities {
+  .tw\:absolute {
+    position: absolute;
+  }
+  .tw\:m-0 {
+    margin: 0px;
+  }
+  .tw\:my-2 {
+    margin-block: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:my-4 {
+    margin-block: calc(var(--tw-spacing) * 4);
+  }
+  .tw\:mt-3 {
+    margin-top: calc(var(--tw-spacing) * 3);
+  }
+  .tw\:mt-4 {
+    margin-top: calc(var(--tw-spacing) * 4);
+  }
+  .tw\:mb-0 {
+    margin-bottom: 0px;
+  }
+  .tw\:mb-5 {
+    margin-bottom: calc(var(--tw-spacing) * 5);
+  }
+  .tw\:mb-8 {
+    margin-bottom: calc(var(--tw-spacing) * 8);
+  }
+  .tw\:block {
+    display: block;
+  }
+  .tw\:flex {
+    display: flex;
+  }
+  .tw\:flex-col {
+    flex-direction: column;
+  }
+  .tw\:flex-wrap {
+    flex-wrap: wrap;
+  }
+  .tw\:items-center {
+    align-items: center;
+  }
+  .tw\:justify-between {
+    justify-content: space-between;
+  }
+  .tw\:justify-center {
+    justify-content: center;
+  }
+  .tw\:gap-2 {
+    gap: calc(var(--tw-spacing) * 2);
+  }
+  .tw\:gap-3 {
+    gap: calc(var(--tw-spacing) * 3);
+  }
+  .tw\:overflow-hidden {
+    overflow: hidden;
+  }
+  .tw\:overflow-x-auto {
+    overflow-x: auto;
+  }
+  .tw\:rounded-2xl {
+    border-radius: var(--tw-radius-2xl);
+  }
+  .tw\:rounded-lg {
+    border-radius: var(--tw-radius-lg);
+  }
+  .tw\:rounded-xl {
+    border-radius: var(--tw-radius-xl);
+  }
+  .tw\:border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .tw\:border-t {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 1px;
+  }
+  .tw\:border-slate-200 {
+    border-color: var(--tw-color-slate-200);
+  }
+  .tw\:bg-slate-900 {
+    background-color: var(--tw-color-slate-900);
+  }
+  .tw\:bg-white {
+    background-color: var(--tw-color-white);
+  }
+  .tw\:p-3 {
+    padding: calc(var(--tw-spacing) * 3);
+  }
+  .tw\:p-6 {
+    padding: calc(var(--tw-spacing) * 6);
+  }
+  .tw\:text-center {
+    text-align: center;
+  }
+  .tw\:text-3xl {
+    font-size: var(--tw-text-3xl);
+    line-height: var(--tw-leading, var(--tw-text-3xl--line-height));
+  }
+  .tw\:text-sm {
+    font-size: var(--tw-text-sm);
+    line-height: var(--tw-leading, var(--tw-text-sm--line-height));
+  }
+  .tw\:text-xl {
+    font-size: var(--tw-text-xl);
+    line-height: var(--tw-leading, var(--tw-text-xl--line-height));
+  }
+  .tw\:font-bold {
+    --tw-font-weight: var(--tw-font-weight-bold);
+    font-weight: var(--tw-font-weight-bold);
+  }
+  .tw\:text-slate-100 {
+    color: var(--tw-color-slate-100);
+  }
+  .tw\:text-slate-600 {
+    color: var(--tw-color-slate-600);
+  }
+  .tw\:text-teal-700 {
+    color: var(--tw-color-teal-700);
+  }
+}
+#live-architecture {
+  color: #172d40;
+  scroll-margin-top: 70px;
+}
+#live-architecture [hidden] {
+  display: none !important;
+}
+#live-architecture button, #live-architecture select {
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+#live-architecture button {
+  min-height: 42px;
+  padding: 9px 15px;
+  border: 1px solid #c5d2dc;
+  background: white;
+  color: #30495c;
+  border-radius: 9px;
+  font-weight: 700;
+}
+#live-architecture button:hover {
+  background: #eaf5f3;
+  border-color: #4a948a;
+}
+#live-architecture button[aria-pressed="true"], #live-architecture [data-control="play"] {
+  background: #0a7368;
+  border-color: #0a7368;
+  color: #fff;
+}
+#live-architecture button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+#live-architecture :focus-visible {
+  outline: 3px solid #2185c5;
+  outline-offset: 3px;
+}
+#live-architecture select {
+  padding: 7px;
+  border: 1px solid #b5c8d0;
+  border-radius: 7px;
+  background: white;
+  color: #172d40;
+}
+#live-architecture input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0a7368;
+}
+.df-scroll {
+  overflow-x: auto;
+  background: #f6f9fc;
+  border-block: 1px solid #dce5ef;
+}
+.df-size {
+  position: relative;
+}
+.df-stage {
+  position: relative;
+  width: 1040px;
+  height: 650px;
+  transform-origin: top left;
+}
+.df-zone {
+  position: absolute;
+  border: 1px solid #bdd6e9;
+  border-radius: 18px;
+  padding: 14px 20px;
+  background: #edf6fd;
+}
+.df-zone > span {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1.4px;
+}
+.df-zone p {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #577184;
+}
+.df-client {
+  left: 20px;
+  top: 20px;
+  width: 190px;
+  height: 440px;
+  color: #1b5c94;
+}
+.df-host {
+  left: 260px;
+  top: 20px;
+  width: 540px;
+  height: 620px;
+  background: #edf8f5;
+  border-color: #b4dcd0;
+  color: #126455;
+}
+.df-registry {
+  left: 840px;
+  top: 20px;
+  width: 190px;
+  height: 440px;
+  background: #fff5e9;
+  border-color: #f2d0a5;
+  color: #945218;
+}
+.df-wires {
+  position: absolute;
+  inset: 0;
+  width: 1040px;
+  height: 650px;
+  overflow: visible;
+}
+.df-wire {
+  fill: none;
+  stroke: #b0c5cf;
+  stroke-width: 2;
+}
+.df-support {
+  fill: none;
+  stroke: #a1bdb7;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+.df-wire.is-active {
+  stroke: #087f72;
+  stroke-width: 3.5;
+}
+.df-packet {
+  fill: #fff;
+  stroke: #087f72;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 5px #0b9d8580);
+}
+.df-node {
+  border-color: #bed1db;
+  box-shadow: 0 3px 6px #1d4c5b08;
+}
+.df-node strong {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.df-node span {
+  margin-top: 5px;
+  font-size: 11px;
+  color: #59717e;
+  line-height: 1.3;
+}
+.df-node.is-active {
+  border: 3px solid #087f72;
+  background: #dbf5ec;
+  box-shadow: 0 0 0 5px #0b9d8514;
+}
+.df-node[data-component="volume"] strong {
+  font-size: 16px;
+}
+.df-build-input {
+  position: absolute;
+  top: 350px;
+  left: 35px;
+  width: 160px;
+  text-align: center;
+  color: #426981;
+  font-size: 14px;
+}
+.df-push-label, .df-pull-label {
+  position: absolute;
+  left: 801px;
+  padding: 0 3px;
+  font-size: 10px;
+  color: #875d2e;
+  background: #fffaf2;
+}
+.df-push-label {
+  top: 250px;
+}
+.df-pull-label {
+  top: 311px;
+}
+.df-command {
+  white-space: pre;
+}
+.df-explanation {
+  min-height: 120px;
+}
+.df-progress {
+  margin: 0;
+}
+.df-mobile-hint {
+  display: none;
+  padding: 9px 18px;
+  font-size: 12px;
+  color: #52697a;
+  background: #f6f9fc;
+}
+@media (max-width: 700px) {
+  .df-mobile-hint {
+    display: block;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .df-packet {
+    display: none;
+  }
+}
+@media print {
+  #live-architecture {
+    display: none;
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-border-style: solid;
+      --tw-font-weight: initial;
+    }
+  }
+}

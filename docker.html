@@ -26,60 +26,13 @@
     @media(max-width:850px){.sidebar{display:flex;align-items:center;gap:10px}.sidebar nav{flex:none}.sidebar nav:not(:last-child){border-right:1px solid var(--line);padding-right:10px}}
     @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col,.decision,.course-topics{grid-template-columns:1fr}.course-cover{min-height:0;padding:23px 19px}.topic-link{min-height:0}.topic{padding:20px 18px}.path{font-size:11px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-    #topic-6 { background: #233d53; }
-    #topic-6 .eyebrow { color: #9fe8db; }
-    .arch-flow {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
-      align-items: center;
-      gap: 16px 22px;
-      margin: 22px 0;
-    }
-    .arch-flow [hidden] { display: none !important; }
-    .arch-map { padding: 10px; border-radius: 14px; background: #172d36; }
-    .arch-map svg { display: block; width: 100%; height: auto; }
-    .arch-host { fill: #213d46; stroke: #557783; stroke-dasharray: 3 4; }
-    .arch-host-label { text-anchor: middle; fill: #bfdbdf; font: 700 10px system-ui, sans-serif; letter-spacing: 1.5px; }
-    .arch-paths path { fill: none; stroke: #84afa9; stroke-width: 2.5; }
-    .arch-node rect { width: 144px; height: 60px; rx: 10px; fill: #304e59; stroke: #89aab2; }
-    .arch-node text { text-anchor: middle; fill: #fff; font: 700 16px system-ui, sans-serif; }
-    .arch-node text.sub { fill: #d3e4e7; font-size: 12px; font-weight: 400; }
-    .arch-node.is-current rect { stroke: #ffdc80; stroke-width: 3; }
-    .arch-paths .is-current { stroke: #ffdc80; stroke-width: 3.5; stroke-dasharray: 7 5; }
-    .arch-flow.is-playing .arch-paths .is-current { animation: arch-travel .8s linear infinite; }
-    @keyframes arch-travel { to { stroke-dashoffset: -24; } }
-    .arch-flow.image-cached [data-node="registry"], .arch-flow.image-cached .arch-paths [data-route="fetch"] { opacity: .45; }
-    .arch-cache { display: flex; align-items: center; gap: 8px; padding: 9px 0; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .arch-cache input { width: 18px; height: 18px; margin: 0; accent-color: #08776a; }
-    .arch-sequence ol { margin: 4px 0; padding-left: 1.6em; font-size: 14px; }
-    .arch-sequence li { padding: 6px 8px; border: 1px solid transparent; border-radius: 7px; }
-    .arch-sequence li::marker { font-weight: 700; }
-    .arch-sequence li.is-current { border-color: var(--accent); background: var(--tint); }
-    .arch-flow figcaption, .arch-controls { grid-column: 1 / -1; }
-    .arch-flow figcaption { font-size: 14px; color: var(--muted); }
-    .arch-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-    .arch-controls button {
-      padding: 8px 12px; min-height: 40px; border: 1px solid #819d99; border-radius: 8px;
-      background: #fff; color: #164d48; font-family: inherit; line-height: 1.4;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-    }
-    .arch-controls button[data-action="play"] { color: white; background: #07675d; border-color: #07675d; }
-    .arch-controls button:disabled { color: #626f76; border-color: #c6d2d4; background: #f2f5f5; cursor: default; }
-    .arch-controls output { font-size: 13px; font-weight: 700; }
-    .arch-answer { padding: 12px 16px; background: var(--tint); border-radius: 10px; }
-    .arch-answer summary { cursor: pointer; font-weight: 700; }
-    .arch-answer[open] summary { margin-bottom: 8px; }
-    .arch-flow :focus-visible, .arch-answer summary:focus-visible { outline: 3px solid #236bb7; outline-offset: 3px; }
-    @media (prefers-reduced-motion: reduce) {
-      .arch-flow.is-playing .arch-paths .is-current { animation: none; }
-    }
   </style>
 </head>
 <body>
   <a class="skip" href="#main">Skip to lesson</a>
   <header class="topbar">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–06</small></span></a>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPICS 00–07</small></span></a>
     <nav aria-label="Course links"><a href="index.html">All courses</a><a href="#course-topics">Topics list</a></nav>
   </header>
   <div class="shell">
@@ -144,13 +97,19 @@
         <a href="#win-help" style="--dot:#52732a"><span class="nav-dot"></span>Troubleshooting</a>
       </nav>
       <p class="sidebar-label">TOPIC 06 · DOCKER ARCHITECTURE</p>
-      <nav aria-label="Docker architecture sections">
-        <a href="#topic-6" style="--dot:#233d53"><span class="nav-dot"></span>Architecture overview</a>
-        <a href="#arch-components" style="--dot:#235795"><span class="nav-dot"></span>Client, host &amp; registry</a>
-        <a href="#arch-trace" style="--dot:#08776a"><span class="nav-dot"></span>Animated run workflow</a>
-        <a href="#arch-objects" style="--dot:#805092"><span class="nav-dot"></span>Images &amp; other objects</a>
-        <a href="#arch-delivery" style="--dot:#99541e"><span class="nav-dot"></span>Build and ship an image</a>
-        <a href="#arch-check" style="--dot:#4a652d"><span class="nav-dot"></span>Predict the second run</a>
+      <nav aria-label="Topic 6 sections">
+        <a href="docker-architecture.html#what-is-docker" style="--dot:#235795"><span class="nav-dot"></span>1. What is Docker</a>
+        <a href="docker-architecture.html#docker-architecture" style="--dot:#08776a"><span class="nav-dot"></span>2. Docker Architecture</a>
+      </nav>
+      <p class="sidebar-label">TOPIC 07 · BASIC COMMANDS</p>
+      <nav aria-label="Topic 7 sections">
+        <a href="docker-commands.html#command-basics" style="--dot:#315fa8"><span class="nav-dot"></span>Getting started</a>
+        <a href="docker-commands.html#images-run" style="--dot:#087b70"><span class="nav-dot"></span>Images and running containers</a>
+        <a href="docker-commands.html#inspect-container" style="--dot:#805092"><span class="nav-dot"></span>Inspect and enter</a>
+        <a href="docker-commands.html#container-lifecycle" style="--dot:#b65825"><span class="nav-dot"></span>Container lifecycle</a>
+        <a href="docker-commands.html#build-share" style="--dot:#99541e"><span class="nav-dot"></span>Build and share</a>
+        <a href="docker-commands.html#networks-volumes" style="--dot:#426c2a"><span class="nav-dot"></span>Networks and volumes</a>
+        <a href="docker-commands.html#cleanup-reference" style="--dot:#ad3c61"><span class="nav-dot"></span>Cleanup and quick reference</a>
       </nav>
     </aside>
     <main id="main">
@@ -165,7 +124,8 @@
           <a class="topic-link" href="#topic-3" style="--card:#5d7423"><small>TOPIC 03</small><strong>VM vs container</strong><span>Architecture, tradeoffs, use cases, and running both together.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-4" style="--card:#007c7b"><small>TOPIC 04</small><strong>Set up Docker</strong><span>Install and verify Docker Engine on Ubuntu, or choose Docker Desktop.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-5" style="--card:#4655a7"><small>TOPIC 05</small><strong>Your first container on Windows 11</strong><span>Verify Docker Desktop, run hello-world, and open a web server.</span><em>Open topic →</em></a>
-          <a class="topic-link" href="#topic-6" style="--card:#233d53"><small>TOPIC 06</small><strong>Docker architecture, components and workflow</strong><span>Follow a run request from PowerShell to a running Nginx container.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="docker-architecture.html#topic-6" style="--card:#233d53"><small>TOPIC 06</small><strong>Docker architecture, components and workflow</strong><span>Follow a run request from PowerShell to a running Nginx container.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="docker-commands.html#topic-7" style="--card:#75508c"><small>TOPIC 07</small><strong>Basic Docker commands</strong><span>Run, inspect, stop, build, share, and clean up with a guided Nginx exercise.</span><em>Open topic →</em></a>
         </nav>
       </section>
       <section class="module-intro topic-zero" id="why-containers">
@@ -682,200 +642,10 @@ docker rm class-web</code></pre></div>
         <div class="table-scroll"><table><thead><tr><th>What you see</th><th>What to try</th></tr></thead><tbody><tr><td><code>docker</code> is not recognized</td><td>Confirm Desktop installed successfully, then open a new PowerShell window.</td></tr><tr><td>Cannot connect to Docker</td><td>Start Docker Desktop, wait for the engine, then run <code>docker version</code> again.</td></tr><tr><td>Image or platform mismatch</td><td>Switch Docker Desktop to Linux containers and check the server information in <code>docker version</code>.</td></tr><tr><td>Port 8080 is already in use</td><td>Choose another host port, for example <code>-p 127.0.0.1:8081:80</code>, and open <code>http://127.0.0.1:8081</code>.</td></tr><tr><td>Container name already in use</td><td>Inspect <code>docker ps -a</code>; choose a different name or remove your earlier stopped demonstration container.</td></tr><tr><td>Image cannot download</td><td>Check internet, DNS, proxy, and access to Docker Hub.</td></tr></tbody></table></div>
         <p class="source">References: <a href="https://docs.docker.com/desktop/setup/install/windows-install/" target="_blank" rel="noopener noreferrer">Docker Desktop · Windows</a> · <a href="https://docs.docker.com/learn/content/run-your-first-container/" target="_blank" rel="noopener noreferrer">Docker Learn · Run your first container</a></p>
       </section>
-      <section class="module-intro" id="topic-6">
-        <p class="eyebrow">Docker foundations · Topic 06</p>
-        <h2>Docker architecture, components and workflow</h2>
-        <p>In Topic 5, PowerShell returned a container ID and your browser showed the Nginx welcome page. Follow that request from the Docker client to the Linux process that served the page.</p>
-      </section>
-
-      <section class="topic" id="arch-components" style="--accent:#235795;--tint:#e9f3ff">
-        <p class="kicker">Slide 01 · Components</p>
-        <h2>Who handles a Docker command?</h2>
-        <div class="grid three">
-          <div class="mini"><h3>Client</h3><p>The <code>docker</code> CLI in PowerShell sends requests through the Engine API. The active Docker context selects the endpoint. <code>docker context ls</code> shows which one is selected.</p></div>
-          <div class="mini"><h3>Docker host</h3><p>The host runs <code>dockerd</code>, the daemon that manages containers, images, networks, and volumes. In Docker Desktop’s Linux container mode, the daemon runs in a Linux environment on your laptop.</p></div>
-          <div class="mini"><h3>Registry</h3><p>Docker Hub and private registries distribute images. In <code>nginx:alpine</code>, <code>nginx</code> names the repository and <code>alpine</code> selects a tag. The short name resolves to Docker Hub’s official Nginx repository.</p></div>
-        </div>
-        <p>Compare the two commands students already know. <code>docker --version</code> prints the client version locally. <code>docker ps</code> asks the selected daemon which containers are running on its host.</p>
-        <p class="source">Component guides from <a href="https://www.geeksforgeeks.org/devops/architecture-of-docker/">GeeksforGeeks</a>, <a href="https://medium.com/@ravipatel.it/understanding-docker-architecture-a-comprehensive-guide-5ce9129df1a4">Ravi Patel</a>, and <a href="https://dev.to/meghasharmaaaa/-22j1">Megha Sharma</a>.</p>
-      </section>
-
-      <section class="topic" id="arch-trace" style="--accent:#08776a;--tint:#e6f6f2">
-        <p class="kicker">Slide 02 · Animated workflow</p>
-        <h2>Follow one <code>docker run</code> request</h2>
-        <p>Trace the Topic 5 command using Docker’s default pull policy. The first run starts with an empty image store. On a later run, which step can Docker skip?</p>
-        <div class="codebox"><div class="code-label">TOPIC 5 COMMAND</div><pre>docker run -d --name class-web -p 127.0.0.1:8080:80 nginx:alpine</pre></div>
-        <figure class="arch-flow" id="arch-player">
-          <div class="arch-map">
-            <svg viewBox="0 0 360 330" role="img" aria-labelledby="arch-map-title arch-map-desc">
-              <title id="arch-map-title">From PowerShell to a running Nginx container</title>
-              <desc id="arch-map-desc">The client calls the daemon. The daemon checks the local image store, which receives missing image layers from the registry. The daemon coordinates creation and the runtime launches Nginx.</desc>
-              <defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#84afa9"/></marker></defs>
-              <rect class="arch-host" x="3" y="108" width="354" height="218" rx="14"/>
-              <text class="arch-host-label" x="180" y="126">DOCKER HOST</text>
-              <g class="arch-paths" marker-end="url(#arch-arrow)">
-                <path data-route="request" d="M83 77v60"/>
-                <path data-route="lookup" d="M155 167h50"/>
-                <path data-route="fetch" d="M277 77v60"/>
-                <path data-route="create" d="M83 197v60"/>
-                <path data-route="start" d="M155 287h50"/>
-              </g>
-              <g class="arch-node" data-node="client" transform="translate(11 17)"><rect/><text x="72" y="25">Docker CLI</text><text class="sub" x="72" y="45">PowerShell</text></g>
-              <g class="arch-node" data-node="registry" transform="translate(205 17)"><rect/><text x="72" y="25">Registry</text><text class="sub" x="72" y="45">Docker Hub</text></g>
-              <g class="arch-node" data-node="daemon" transform="translate(11 137)"><rect/><text x="72" y="25">Daemon</text><text class="sub" x="72" y="45">dockerd</text></g>
-              <g class="arch-node" data-node="store" transform="translate(205 137)"><rect/><text x="72" y="25">Image store</text><text class="sub" x="72" y="45">on the Docker host</text></g>
-              <g class="arch-node" data-node="runtime" transform="translate(11 257)"><rect/><text x="72" y="25">Runtime</text><text class="sub" x="72" y="45">containerd · runc</text></g>
-              <g class="arch-node" data-node="web" transform="translate(205 257)"><rect/><text x="72" y="25">Container</text><text class="sub" x="72" y="45">Nginx process</text></g>
-            </svg>
-          </div>
-          <div class="arch-sequence">
-            <label class="arch-cache" hidden><input type="checkbox"> Image already on host</label>
-            <ol aria-label="Run sequence">
-              <li data-route="request" data-nodes="client daemon"><strong>Send the request.</strong> The CLI asks the daemon to create and start <code>class-web</code> with the given port mapping.</li>
-              <li data-route="lookup" data-nodes="daemon store"><strong>Check the image.</strong> Docker looks for <code>nginx:alpine</code> in this host’s image store.</li>
-              <li data-route="fetch" data-nodes="registry store"><strong>Pull the missing image.</strong> Docker resolves the tag at the registry and downloads any layers the host still needs.</li>
-              <li data-route="create" data-nodes="daemon runtime"><strong>Prepare the container.</strong> Docker sets up the writable layer and networking, then hands the launch to containerd.</li>
-              <li data-route="start" data-nodes="runtime web"><strong>Start Nginx.</strong> On a typical Linux engine, containerd uses a shim and runc to launch the process. With <code>-d</code>, the CLI returns the container ID while Nginx keeps running.</li>
-            </ol>
-          </div>
-          <figcaption>After startup, requests to <code>127.0.0.1:8080</code> reach Nginx on port 80 through the published port. Once Nginx is running, the browser can load the page even if the registry is offline.</figcaption>
-          <div class="arch-controls" hidden>
-            <button type="button" data-action="back">Previous step</button>
-            <button type="button" data-action="play">Play flow</button>
-            <button type="button" data-action="next">Next step</button>
-            <output aria-live="polite"></output>
-          </div>
-        </figure>
-        <p class="source"><a href="https://www.blacksmith.sh/blog/docker-architecture-the-components-and-processes-part-1">Blacksmith’s walkthrough of Docker processes</a> · <a href="https://www.sysdig.com/learn-cloud-native/what-is-docker-architecture">Sysdig’s architecture guide</a> · <a href="runtime.html">Explore the runtime stack</a></p>
-      </section>
-
-      <section class="topic" id="arch-objects" style="--accent:#805092;--tint:#f6edf9">
-        <p class="kicker">Slide 03 · Docker objects</p>
-        <h2>What does the host keep?</h2>
-        <div class="table-scroll"><table><thead><tr><th>Object</th><th>Role in the class web demo</th><th>Inspect it</th></tr></thead><tbody>
-          <tr><td>Image</td><td>The local Nginx filesystem layers and startup configuration can supply many containers.</td><td><code>docker image ls</code></td></tr>
-          <tr><td>Container</td><td><code>class-web</code> has its own ID, writable layer, and lifecycle. Its record remains after a stop until it is removed.</td><td><code>docker ps -a</code></td></tr>
-          <tr><td>Network</td><td>The container joins a Docker network. Publishing a port makes its web server reachable from the laptop.</td><td><code>docker network inspect bridge</code></td></tr>
-          <tr><td>Volume</td><td>A named volume can keep database files across container replacements. The Nginx demo needs no named volume.</td><td><code>docker volume ls</code></td></tr>
-        </tbody></table></div>
-        <p>While <code>class-web</code> is running, compare its entry in <code>docker ps</code> with <code>docker image ls</code>. After the Topic 5 cleanup, the container disappears and the image is available for the next run.</p>
-        <p class="source"><a href="https://nitizsharma.com/docker-architecture-components/">Nitiz Sharma’s component guide</a> · <a href="https://dev.to/meghasharmaaaa/-22j1">Docker networks, volumes, and images on DEV</a></p>
-      </section>
-
-      <section class="topic" id="arch-delivery" style="--accent:#99541e;--tint:#fff2e6">
-        <p class="kicker">Slide 04 · Build and delivery</p>
-        <h2>How does a team ship its own image?</h2>
-        <p>Suppose your team adds an <code>index.html</code> to the class web demo. Save these two lines as <code>Dockerfile</code> next to that page, and build from that directory.</p>
-        <div class="codebox"><div class="code-label">Dockerfile</div><pre>FROM nginx:alpine
-COPY index.html /usr/share/nginx/html/index.html</pre></div>
-        <ol class="steps">
-          <li><strong>Build.</strong> <code>docker build -t class-site:1 .</code> gives the builder access to the current directory. Buildx submits the build to BuildKit, which reads the Dockerfile, reuses available layers, and produces the image.</li>
-          <li><strong>Tag and push.</strong> To share it, tag <code>class-site:1</code> with a repository you can publish to. For a Docker Hub account named <code>exampleteam</code>, the reference could be <code>exampleteam/class-site:1</code>. After authenticating, the team pushes that reference to its registry.</li>
-          <li><strong>Pull and run.</strong> A second Docker host pulls the published image. Each container created from that image starts with the same page. A new page release requires a new build and a replacement container.</li>
-        </ol>
-        <p>With a backend and database, Compose can describe the services, their shared network, and a database volume in one file. The Engine manages the resulting containers on the selected host.</p>
-        <p class="source"><a href="https://docs.docker.com/build/concepts/overview/">Docker Build documentation</a> · <a href="https://nitizsharma.com/docker-architecture-components/">Build, pull, run, and Compose</a></p>
-      </section>
-
-      <section class="topic" id="arch-check" style="--accent:#4a652d;--tint:#f1f7e9">
-        <p class="kicker">Slide 05 · Check your understanding</p>
-        <h2>Predict the second run</h2>
-        <p>You stop and remove <code>class-web</code>, leave <code>nginx:alpine</code> on the same host, then run the original command again. With the default pull policy, which component can Docker skip, and what gets created again?</p>
-        <details class="arch-answer"><summary>Show the answer</summary><p>Docker can skip the registry because the tagged image is local. It creates a fresh container with a new ID and writable layer, publishes its port, and starts a new Nginx process. Select “Image already on host” in the <a href="#arch-trace">animated workflow</a> to follow this path.</p></details>
-        <p class="source">Further study · <a href="https://www.youtube.com/watch?v=8wFDvqAbB9Q">Watch the supplied YouTube video</a> · <a href="https://medium.com/@sazanu/understanding-docker-architecture-and-workflow-6c73158f8988">Understanding Docker Architecture and Workflow on Medium</a></p>
-      </section>
-
-      <footer class="finish">End of Topic 06 · <a href="#course-topics">Back to topics list</a> · <a href="index.html">All courses</a></footer>
+      <footer class="finish"><a href="docker-architecture.html">Continue to Topic 6 · Docker architecture</a> · <a href="#course-topics">Back to topics list</a> · <a href="index.html">All courses</a></footer>
     </main>
   </div>
-  <script>
-    (() => {
-      const player = document.getElementById('arch-player');
-      const cacheOption = player.querySelector('.arch-cache');
-      const cached = cacheOption.querySelector('input');
-      const controls = player.querySelector('.arch-controls');
-      const previous = controls.querySelector('[data-action="back"]');
-      const play = controls.querySelector('[data-action="play"]');
-      const next = controls.querySelector('[data-action="next"]');
-      const status = controls.querySelector('output');
-      const steps = [...player.querySelectorAll('.arch-sequence li')];
-      const paths = player.querySelectorAll('.arch-paths path');
-      const nodes = player.querySelectorAll('.arch-node');
-      let sequence = steps;
-      let position = 0;
-      let timer = null;
 
-      function render() {
-        const current = sequence[position];
-        const activeNodes = current.dataset.nodes.split(' ');
-        const atEnd = position === sequence.length - 1;
-        for (const step of steps) {
-          step.classList.toggle('is-current', step === current);
-          if (step === current) step.setAttribute('aria-current', 'step');
-          else step.removeAttribute('aria-current');
-        }
-        for (const path of paths) {
-          path.classList.toggle('is-current', path.dataset.route === current.dataset.route);
-        }
-        for (const node of nodes) {
-          node.classList.toggle('is-current', activeNodes.includes(node.dataset.node));
-        }
-        player.classList.toggle('is-playing', timer !== null);
-        previous.disabled = position === 0;
-        next.disabled = atEnd;
-        play.textContent = timer !== null ? 'Pause flow' : atEnd ? 'Replay flow' : 'Play flow';
-        status.value = 'Step ' + (position + 1) + ' of ' + sequence.length + ' · ' + current.querySelector('strong').textContent;
-      }
-
-      function pause() {
-        clearInterval(timer);
-        timer = null;
-      }
-
-      function move(delta) {
-        pause();
-        position += delta;
-        render();
-      }
-
-      function resetSequence() {
-        pause();
-        position = 0;
-        for (const step of steps) {
-          step.hidden = cached.checked && step.dataset.route === 'fetch';
-        }
-        sequence = steps.filter(step => !step.hidden);
-        player.classList.toggle('image-cached', cached.checked);
-        render();
-      }
-
-      previous.addEventListener('click', () => move(-1));
-      next.addEventListener('click', () => move(1));
-      cached.addEventListener('change', resetSequence);
-      play.addEventListener('click', () => {
-        if (timer !== null) {
-          pause();
-        } else {
-          if (position === sequence.length - 1) position = 0;
-          timer = setInterval(() => {
-            position += 1;
-            if (position === sequence.length - 1) pause();
-            render();
-          }, 3000);
-        }
-        render();
-      });
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden && timer !== null) {
-          pause();
-          render();
-        }
-      });
-      resetSequence();
-      cacheOption.hidden = false;
-      controls.hidden = false;
-    })();
-  </script>
 </body>
 </html>
 

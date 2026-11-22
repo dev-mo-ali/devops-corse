@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f8fc">
+  <meta name="description" content="Explore Docker clients, the daemon, registries, images, containers, and the build-to-run workflow with an interactive animated diagram.">
+  <title>Docker Architecture, Components and Workflow</title>
+  <link rel="stylesheet" href="assets/docker-flow.css">
+  <script src="assets/docker-flow.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:light;--bg:#f5f8fc;--ink:#14263b;--muted:#5c6e82;--line:#dfe7f0}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 "DM Sans",system-ui,sans-serif}h1,h2,h3,.brand{font-family:"Space Grotesk",system-ui,sans-serif;line-height:1.15}a{color:#135cb0}a:focus-visible{outline:3px solid #135cb0;outline-offset:3px;border-radius:3px}.skip{position:absolute;top:-60px;left:12px;padding:9px 14px;background:#fff;z-index:5}.skip:focus{top:12px}
+    .topbar{min-height:70px;padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none;font-weight:700;letter-spacing:.02em}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#e8f4ff;color:#0877c9;font-size:20px}.brand small{display:block;color:var(--muted);font:11px "DM Sans",sans-serif;letter-spacing:.08em}.topbar nav{display:flex;gap:18px;font-size:13px;font-weight:700}.topbar nav a{text-decoration:none}
+    .shell{max-width:1440px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{background:#fff;border-right:1px solid var(--line);min-height:calc(100vh - 70px);padding:28px 14px 32px}.sidebar-label{padding:0 12px;color:#91a0ae;font-size:11px;font-weight:800;letter-spacing:.12em}.sidebar nav{display:grid;gap:5px}.sidebar a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:#4d6074;text-decoration:none;font-size:13px;font-weight:700}.sidebar a:hover,.sidebar a:focus-visible{background:#f2f6fa}.nav-dot{width:10px;height:10px;flex:none;border-radius:50%;background:var(--dot)}
+    main{min-width:0;padding:44px clamp(20px,5vw,72px) 78px}.intro{max-width:960px;margin-bottom:32px}.eyebrow{margin:0 0 11px;color:#0877c9;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em}.lead{max-width:780px;color:var(--muted);font-size:clamp(18px,2vw,22px);margin:0 0 20px}.path{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#45627c;font-size:13px;font-weight:700}.path span{padding:6px 10px;border-radius:999px;background:#e8f4ff}.path b{color:#8aa1b5}
+    .topic{--accent:#1d4ed8;--tint:#eef4ff;max-width:1000px;margin:0 0 25px;padding:clamp(22px,3vw,34px);background:#fff;border:1px solid var(--line);border-top:5px solid var(--accent);border-radius:18px;box-shadow:0 8px 25px #14263b08;scroll-margin-top:18px}.topic.data-center{--accent:#0f766e;--tint:#e8f8f4}.topic.vm{--accent:#7041b5;--tint:#f2ecfc}.topic.types{--accent:#bc5d16;--tint:#fff2e5}.topic.works{--accent:#087aaf;--tint:#e8f7fd}.topic.tradeoffs{--accent:#537a20;--tint:#f1f7e7}.kicker{display:inline-block;margin:0 0 10px;padding:5px 10px;border-radius:999px;background:var(--tint);color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.topic h2{margin:0 0 14px;font-size:clamp(28px,3vw,38px);letter-spacing:-.035em}.topic h3{font-size:19px;margin:0 0 8px}.topic p{max-width:900px;margin:0 0 16px}.topic p:last-child{margin-bottom:0}.topic strong{color:var(--ink)}.topic code{padding:2px 5px;border-radius:4px;background:var(--tint);color:var(--accent);font-size:.9em}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:19px 0}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.mini{padding:18px;border:1px solid var(--line);border-radius:13px;background:#fcfdff}.mini p{margin:0;color:var(--muted);font-size:14px}.mini-label{display:block;margin-bottom:8px;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.11em}.callout{padding:15px 18px;margin:18px 0;background:var(--tint);border-left:4px solid var(--accent);border-radius:0 11px 11px 0}.callout p{margin:0}.diagram{overflow-x:auto;margin:23px 0;padding:15px;border:1px solid var(--line);border-radius:15px;background:var(--tint)}.diagram svg{display:block;width:100%;min-width:620px;height:auto}.diagram figcaption{margin-top:8px;color:var(--muted);font-size:12px;text-align:center}.steps{counter-reset:step;list-style:none;padding:0;margin:19px 0;display:grid;gap:10px}.steps li{position:relative;padding:12px 14px 12px 51px;border:1px solid var(--line);border-radius:11px;background:#fcfdff}.steps li:before{counter-increment:step;content:counter(step);position:absolute;left:13px;top:12px;display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:var(--tint);color:var(--accent);font-size:12px;font-weight:800}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}.list-card{padding:19px;border-radius:14px;border:1px solid var(--line);background:#fcfdff}.list-card.good{border-top:4px solid #23804a}.list-card.caution{border-top:4px solid #b84c44}.list-card ul{margin:10px 0 0;padding-left:21px}.list-card li{margin:8px 0}.source{margin-top:19px!important;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}.source a{font-weight:700}.finish{max-width:1000px;padding:14px 4px;color:var(--muted);font-size:13px}
+    .sidebar-label:not(:first-child){margin-top:24px}.module-intro{max-width:1000px;margin:50px 0 26px;padding:28px 30px;border-radius:18px;background:#14263b;color:#fff;scroll-margin-top:18px}.module-intro .eyebrow{color:#86d3ff}.module-intro h2{font-size:clamp(30px,4vw,48px);letter-spacing:-.04em;margin:0 0 12px}.module-intro p:last-child{margin:0;color:#cedceb;max-width:790px}.topic.process{--accent:#a64d09;--tint:#fff2e6}.topic.daemon{--accent:#ae2253;--tint:#fff0f5}.topic.service{--accent:#4f46ad;--tint:#f1f0ff}.topic.namespace{--accent:#0e7490;--tint:#e8f8fd}.topic.cgroups{--accent:#7e35a5;--tint:#f8edff}.topic.connection{--accent:#24733f;--tint:#eaf8ef}.codebox{margin:16px 0 20px;overflow:hidden;border-radius:12px;background:#17283d;color:#eaf4ff}.codebox pre{margin:0;padding:15px 18px;overflow-x:auto;font:13px/1.6 Consolas,"Courier New",monospace}.code-label{padding:7px 16px;background:#25415e;color:#c7d9e9;font-size:10px;font-weight:800;letter-spacing:.08em}.topic table{width:100%;border-collapse:collapse;font-size:14px}.topic th,.topic td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.topic th{background:var(--tint)}.table-scroll{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:12px}.topic tr:last-child td{border-bottom:0}
+    .course-cover{max-width:1000px;min-height:calc(100dvh - 160px);margin:0 0 35px;padding:clamp(24px,4vw,42px);background:#fff;border:1px solid var(--line);border-top:5px solid #0877c9;border-radius:19px;box-shadow:0 10px 30px #14263b0a;scroll-margin-top:18px}.course-cover h1{margin-bottom:14px}.course-topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:27px}.topic-link{--card:#0877c9;display:flex;flex-direction:column;min-height:164px;padding:20px 22px;border:1px solid var(--line);border-top:4px solid var(--card);border-radius:14px;background:#fbfdff;color:var(--ink);text-decoration:none;transition:transform .18s,box-shadow .18s}.topic-link:hover{transform:translateY(-3px);box-shadow:0 9px 22px #14263b14}.topic-link:focus-visible{outline-color:var(--card)}.topic-link small{color:var(--card);font-size:11px;font-weight:800;letter-spacing:.1em}.topic-link strong{margin:7px 0 5px;font:700 23px/1.2 "Space Grotesk",sans-serif}.topic-link span{color:var(--muted);font-size:13px;line-height:1.5}.topic-link em{margin-top:auto;padding-top:13px;color:var(--card);font-size:13px;font-style:normal;font-weight:800}.module-intro.topic-zero{margin-top:0;background:#3b2548}.module-intro.topic-zero .eyebrow{color:#ffc1e0}.module-intro.topic-zero h2{margin:0 0 16px;font-size:clamp(39px,5.2vw,62px)}.module-intro.topic-zero p{max-width:800px}.topic.setup-zero{--accent:#a72d58;--tint:#fff0f6}.topic.container-zero{--accent:#176575;--tint:#e9f8fa}.topic.image-zero{--accent:#96610d;--tint:#fff6e7}.topic.registry-zero{--accent:#6f44a3;--tint:#f4effb}.intro h2{margin:0 0 18px;font-size:clamp(38px,5.2vw,68px);letter-spacing:-.05em;line-height:1.15}.plain-next{display:inline-block;margin-top:5px;padding:9px 13px;border:1px solid currentColor;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none}
+    .module-intro.topic-three{background:#173b5c}.module-intro.topic-three .eyebrow{color:#9addff}.topic.architecture-three{--accent:#b9571f;--tint:#fff1e9}.topic.differences-three{--accent:#286f71;--tint:#e9f8f6}.topic.choose-three{--accent:#9a3980;--tint:#fbedf7}.topic.together-three{--accent:#426c2a;--tint:#f0f8e9}.decision{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}.decision .mini{border-top:4px solid var(--accent)}
+    .module-intro.topic-four{background:#164c50}.module-intro.topic-four .eyebrow{color:#a4f3e8}.topic.setup-choice{--accent:#007c7b;--tint:#e9faf7}.topic.setup-prepare{--accent:#a25224;--tint:#fff2e9}.topic.setup-repo{--accent:#7045a5;--tint:#f4effb}.topic.setup-install{--accent:#1d659f;--tint:#eaf5ff}.topic.setup-verify{--accent:#4d792a;--tint:#f0f8e7}.topic.setup-access{--accent:#ad3c61;--tint:#fff0f5}.topic.setup-desktop{--accent:#a3670a;--tint:#fff6e6}.topic.setup-trouble{--accent:#4d5ba8;--tint:#f0f1ff}
+    .module-intro.topic-five{background:#333b76}.module-intro.topic-five .eyebrow{color:#cdd3ff}.topic.win-ready{--accent:#315fa8;--tint:#edf4ff}.topic.win-hello{--accent:#087b70;--tint:#e8f8f3}.topic.win-web{--accent:#b65825;--tint:#fff2e9}.topic.win-manage{--accent:#8a438c;--tint:#f9eefb}.topic.win-help{--accent:#52732a;--tint:#f1f8e9}
+    @media(max-width:850px){.shell{grid-template-columns:1fr}.sidebar{position:sticky;top:0;z-index:3;min-height:0;padding:7px 10px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.sidebar-label{display:none}.sidebar nav{display:flex;gap:4px;width:max-content}.sidebar a{white-space:nowrap;padding:8px 10px}main{padding:30px 19px 60px}}
+    @media(max-width:850px){.sidebar{display:flex;align-items:center;gap:10px}.sidebar nav{flex:none}.sidebar nav:not(:last-child){border-right:1px solid var(--line);padding-right:10px}}
+    @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col,.decision,.course-topics{grid-template-columns:1fr}.course-cover{min-height:0;padding:23px 19px}.topic-link{min-height:0}.topic{padding:20px 18px}.path{font-size:11px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    #topic-6 { background: #233d53; }
+    #topic-6 .eyebrow { color: #9fe8db; }
+    .arch-flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      align-items: center;
+      gap: 16px 22px;
+      margin: 22px 0;
+    }
+    .arch-flow [hidden] { display: none !important; }
+    .arch-map { padding: 10px; border-radius: 14px; background: #172d36; }
+    .arch-map svg { display: block; width: 100%; height: auto; }
+    .arch-host { fill: #213d46; stroke: #557783; stroke-dasharray: 3 4; }
+    .arch-host-label { text-anchor: middle; fill: #bfdbdf; font: 700 10px system-ui, sans-serif; letter-spacing: 1.5px; }
+    .arch-paths path { fill: none; stroke: #84afa9; stroke-width: 2.5; }
+    .arch-node rect { width: 144px; height: 60px; rx: 10px; fill: #304e59; stroke: #89aab2; }
+    .arch-node text { text-anchor: middle; fill: #fff; font: 700 16px system-ui, sans-serif; }
+    .arch-node text.sub { fill: #d3e4e7; font-size: 12px; font-weight: 400; }
+    .arch-node.is-current rect { stroke: #ffdc80; stroke-width: 3; }
+    .arch-paths .is-current { stroke: #ffdc80; stroke-width: 3.5; stroke-dasharray: 7 5; }
+    .arch-flow.is-playing .arch-paths .is-current { animation: arch-travel .8s linear infinite; }
+    @keyframes arch-travel { to { stroke-dashoffset: -24; } }
+    .arch-flow.image-cached [data-node="registry"], .arch-flow.image-cached .arch-paths [data-route="fetch"] { opacity: .45; }
+    .arch-cache { display: flex; align-items: center; gap: 8px; padding: 9px 0; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .arch-cache input { width: 18px; height: 18px; margin: 0; accent-color: #08776a; }
+    .arch-sequence ol { margin: 4px 0; padding-left: 1.6em; font-size: 14px; }
+    .arch-sequence li { padding: 6px 8px; border: 1px solid transparent; border-radius: 7px; }
+    .arch-sequence li::marker { font-weight: 700; }
+    .arch-sequence li.is-current { border-color: var(--accent); background: var(--tint); }
+    .arch-flow figcaption, .arch-controls { grid-column: 1 / -1; }
+    .arch-flow figcaption { font-size: 14px; color: var(--muted); }
+    .arch-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .arch-controls button {
+      padding: 8px 12px; min-height: 40px; border: 1px solid #819d99; border-radius: 8px;
+      background: #fff; color: #164d48; font-family: inherit; line-height: 1.4;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .arch-controls button[data-action="play"] { color: white; background: #07675d; border-color: #07675d; }
+    .arch-controls button:disabled { color: #626f76; border-color: #c6d2d4; background: #f2f5f5; cursor: default; }
+    .arch-controls output { font-size: 13px; font-weight: 700; }
+    .arch-answer { padding: 12px 16px; background: var(--tint); border-radius: 10px; }
+    .arch-answer summary { cursor: pointer; font-weight: 700; }
+    .arch-answer[open] summary { margin-bottom: 8px; }
+    .arch-flow :focus-visible, .arch-answer summary:focus-visible { outline: 3px solid #236bb7; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) {
+      .arch-flow.is-playing .arch-paths .is-current { animation: none; }
+    }
+    #topic-6 { margin-top: 0; }
+    #topic-6 h1 { font-size: clamp(34px, 4vw, 52px); }
+    .shell { max-width: 1800px; }
+    .architecture-poster { margin: 0 0 28px; background: #fffdf7; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+    .architecture-poster img { display: block; width: 100%; height: auto; }
+    .architecture-poster figcaption { padding: 18px 22px; border-top: 1px solid var(--line); font-size: 14px; }
+    .poster-actions { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 12px; font-weight: 700; }
+    .architecture-poster p { margin: 8px 0 0; }
+    .architecture-poster summary { cursor: pointer; font-weight: 700; }
+    .architecture-poster details { margin-top: 12px; }
+    @media print {
+      .topbar, .sidebar, .module-intro, .topic, .finish, .poster-actions, .architecture-poster details { display: none; }
+      .shell { display: block; } main { padding: 0; }
+      .architecture-poster { border: 0; }
+    }
+    #what-is-docker, #docker-architecture { scroll-margin-top: 75px; }
+    .architecture-heading { background: #164c50; margin-top: 35px; }
+    .architecture-section .topic > h3 { margin: 0 0 14px; font-size: clamp(28px,3vw,38px); letter-spacing: -.035em; }
+    .architecture-section .mini h4 { margin: 0 0 8px; font-size: 19px; }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to lesson</a>
+  <header class="topbar">
+    <a class="brand" href="docker.html"><span class="brand-mark" aria-hidden="true">◈</span><span>DOCKER FOUNDATIONS<small>TOPIC 06 · ARCHITECTURE</small></span></a>
+    <nav aria-label="Course links"><a href="docker.html#course-topics">Docker course</a><a href="index.html">All courses</a></nav>
+  </header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Lesson navigation">
+      <p class="sidebar-label">TOPIC 06 · DOCKER ARCHITECTURE</p>
+      <nav aria-label="Topic 6 sections">
+        <a href="#what-is-docker" style="--dot:#235795"><span class="nav-dot"></span>1. What is Docker</a>
+        <a href="#docker-architecture" style="--dot:#08776a"><span class="nav-dot"></span>2. Docker Architecture</a>
+      </nav>
+    </aside>
+    <main id="main">
+      <header class="module-intro" id="topic-6">
+        <p class="eyebrow">Docker foundations · Topic 06</p>
+        <h1>Docker fundamentals and architecture</h1>
+        <p>Follow a Docker command from the client to a running container. Explore the components involved, the objects Docker manages, and how a team builds and shares an image. The examples use Docker Desktop on Windows 11 with Linux containers.</p>
+      </header>
+
+      <section class="topic" id="what-is-docker" aria-labelledby="docker-introduction-title" style="--accent:#235795;--tint:#e9f3ff">
+        <p class="kicker">Section 1</p>
+        <h2 id="docker-introduction-title">What is Docker</h2>
+        <p>Docker provides tools to package applications and run them in containers. Packaging the application with its dependencies reduces differences between development, testing, and production. Linux containers share the Docker host’s kernel, which helps keep their resource overhead low.</p>
+        <div class="grid three">
+          <div class="mini"><h3>Dockerfile</h3><p>A text file containing build instructions, such as selecting a base image and copying application files.</p></div>
+          <div class="mini"><h3>Image</h3><p>A reusable, read-only template containing filesystem layers and configuration used to create containers.</p></div>
+          <div class="mini"><h3>Container</h3><p>An instance created from an image, with its own writable layer and process environment. It can be running or stopped.</p></div>
+        </div>
+        <div class="callout"><p><strong>Follow the lifecycle.</strong> Build an image from a Dockerfile, push it to a registry, pull it onto another compatible host, and create a container from it. Docker Hub is a hosted registry for finding and sharing images.</p></div>
+        <p class="source">Introduction adapted from <a href="https://www.geeksforgeeks.org/devops/introduction-to-docker/" target="_blank" rel="noopener">What is Docker? — GeeksforGeeks</a>.</p>
+      </section>
+
+      <section id="docker-architecture" class="architecture-section" aria-labelledby="docker-architecture-title">
+        <header class="module-intro architecture-heading">
+          <p class="eyebrow">Section 2</p>
+          <h2 id="docker-architecture-title">Docker Architecture</h2>
+          <p>Explore the components, then follow how Docker builds, shares, and runs containers.</p>
+        </header>
+
+      <section class="topic" id="arch-components" style="--accent:#235795;--tint:#e9f3ff">
+        <p class="kicker">Components</p>
+        <h3>Who handles a Docker command?</h3>
+        <div class="grid three">
+          <div class="mini"><h4>Client</h4><p>The <code>docker</code> CLI in PowerShell sends requests through the Engine API. The active Docker context selects the endpoint. <code>docker context ls</code> shows which one is selected.</p></div>
+          <div class="mini"><h4>Docker host</h4><p>The host runs <code>dockerd</code>, the daemon that manages containers, images, networks, and volumes. In Docker Desktop’s Linux container mode, the daemon runs in a Linux environment on your laptop.</p></div>
+          <div class="mini"><h4>Registry</h4><p>Docker Hub and private registries distribute images. In <code>nginx:alpine</code>, <code>nginx</code> names the repository and <code>alpine</code> selects a tag. The short name resolves to Docker Hub’s official Nginx repository.</p></div>
+        </div>
+        <p>Compare two commands. <code>docker --version</code> prints the client version locally. <code>docker ps</code> asks the selected daemon which containers are running on its host.</p>
+        <p class="source">Component guides from <a href="https://www.geeksforgeeks.org/devops/architecture-of-docker/">GeeksforGeeks</a>, <a href="https://medium.com/@ravipatel.it/understanding-docker-architecture-a-comprehensive-guide-5ce9129df1a4">Ravi Patel</a>, and <a href="https://dev.to/meghasharmaaaa/-22j1">Megha Sharma</a>.</p>
+      </section>
+
+      <section id="live-architecture" class="tw:mb-8 tw:overflow-hidden tw:rounded-2xl tw:border tw:border-slate-200 tw:bg-white" aria-labelledby="live-title">
+        <div class="tw:p-6">
+          <p class="eyebrow">Interactive architecture</p>
+          <h3 id="live-title" class="tw:m-0 tw:text-3xl tw:font-bold">Watch Docker work</h3>
+          <p class="tw:mt-3 tw:mb-5 tw:text-slate-600">Choose a workflow and follow the moving marker. Each highlighted connection shows the next request, image transfer, or runtime action.</p>
+          <div class="df-options tw:flex tw:flex-wrap tw:gap-2" role="group" aria-label="Choose a workflow">
+            <button type="button" data-workflow="run" aria-pressed="true">Run a container</button>
+            <button type="button" data-workflow="build" aria-pressed="false">Build an image</button>
+            <button type="button" data-workflow="push" aria-pressed="false">Push to registry</button>
+            <button type="button" data-workflow="pull" aria-pressed="false">Pull an image</button>
+          </div>
+          <div class="tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3">
+            <label class="df-cache tw:flex tw:items-center tw:gap-2 tw:text-sm"><input type="checkbox" data-cached> Image already on host</label>
+            <label class="tw:flex tw:items-center tw:gap-2 tw:text-sm">Playback speed <select data-speed><option value="4500">Slow</option><option value="2800" selected>Normal</option><option value="1400">Fast</option></select></label>
+          </div>
+        </div>
+        <div class="df-scroll" tabindex="0" role="region" aria-label="Full Docker architecture diagram. Scroll horizontally on small screens.">
+          <div class="df-size"><div class="df-stage">
+            <div class="df-zone df-client"><span>CLIENT</span><p>Your terminal</p></div>
+            <div class="df-zone df-host"><span>DOCKER HOST</span><p>Linux environment · Docker Desktop on Windows 11</p></div>
+            <div class="df-zone df-registry"><span>REGISTRY</span><p>Image distribution</p></div>
+            <svg class="df-wires" viewBox="0 0 1040 650" aria-hidden="true">
+              <defs><marker id="df-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+              <path class="df-support" d="M365 444V480 M365 544V570 M680 412H655V556H420V544"/>
+              <path class="df-wire" data-edge="request" d="M190 132 H290" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="api" d="M460 132 H520" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="build" d="M190 286 H290" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="output" d="M460 286 H580" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="lookup" d="M665 164 V250" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="push" d="M750 270 H860" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="pull" d="M860 302 H750" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="network" d="M520 145 H480 V412 H440" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="runtime" d="M550 164 V380" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="shim" d="M570 444 V480" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="kernel" d="M570 544 V570" marker-end="url(#df-arrow)"/>
+              <path class="df-wire" data-edge="start" d="M500 512 H440" marker-end="url(#df-arrow)"/>
+              <circle class="df-packet" r="6" cx="0" cy="0"/>
+            </svg>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="cli" style="left:40px;top:100px;width:150px;height:64px"><strong>Docker CLI</strong><span>PowerShell</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="buildx" style="left:40px;top:250px;width:150px;height:72px"><strong>Buildx</strong><span>Build client</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="api" style="left:290px;top:100px;width:170px;height:64px"><strong>Engine API</strong><span>Requests</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="daemon" style="left:520px;top:100px;width:180px;height:64px"><strong>dockerd</strong><span>Docker daemon</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="builder" style="left:290px;top:250px;width:170px;height:72px"><strong>BuildKit</strong><span>Build executor</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="images" style="left:580px;top:250px;width:170px;height:72px"><strong>Local images</strong><span>Layers + configuration</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="registry" style="left:860px;top:250px;width:150px;height:72px"><strong>Registry</strong><span>Hub / private registry</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="network" style="left:290px;top:380px;width:150px;height:64px"><strong>Networks</strong><span>Connect containers</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="containerd" style="left:500px;top:380px;width:140px;height:64px"><strong>containerd</strong><span>Manage lifecycle</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="runtime" style="left:500px;top:480px;width:140px;height:64px"><strong>shim / runc</strong><span>Supervise / launch</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="container" style="left:290px;top:480px;width:150px;height:64px"><strong>Container</strong><span>Nginx process</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="volume" style="left:680px;top:380px;width:100px;height:64px"><strong>Volumes</strong><span>Optional mounts</span></div>
+            <div class="df-node tw:absolute tw:flex tw:flex-col tw:items-center tw:justify-center tw:rounded-xl tw:border tw:bg-white tw:text-center" data-component="kernel" style="left:290px;top:570px;width:460px;height:54px"><strong>Linux kernel</strong><span>Namespaces · cgroups</span></div>
+            <div class="df-build-input">Dockerfile + source<br>↓ Buildx</div>
+            <span class="df-push-label">push →</span><span class="df-pull-label">← pull</span>
+          </div></div>
+        </div>
+        <div class="df-mobile-hint">Scroll across the diagram to see every component.</div>
+        <div class="tw:p-6 tw:border-t tw:border-slate-200">
+          <code class="df-command tw:block tw:overflow-x-auto tw:rounded-lg tw:bg-slate-900 tw:p-3 tw:text-sm tw:text-slate-100">docker run -d --name class-web -p 127.0.0.1:8080:80 nginx:alpine</code>
+          <div class="df-explanation tw:my-4" aria-live="polite" aria-atomic="true">
+            <p class="df-progress tw:text-sm tw:font-bold tw:text-teal-700"></p>
+            <h4 class="df-step-title tw:my-2 tw:text-xl"></h4>
+            <p class="df-step-copy tw:m-0 tw:text-slate-600"></p>
+          </div>
+          <div class="df-controls tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+            <button type="button" data-control="previous">← Previous</button>
+            <button type="button" data-control="play">Play workflow</button>
+            <button type="button" data-control="next">Next →</button>
+            <button type="button" data-control="reset">Restart</button>
+            <span class="df-motion-note tw:text-sm tw:text-slate-600" hidden>Reduced motion enabled. Use the controls to follow each step.</span>
+          </div>
+          <p class="tw:mt-4 tw:mb-0 tw:text-sm tw:text-slate-600">This is a teaching simulation of Linux containers using the default local builder. Volumes are optional in the Nginx example. A shim supervises the process after runc finishes launching it.</p>
+          <noscript><p>Enable JavaScript to play the workflows. The diagram shows all components, and the image below includes a written walkthrough.</p></noscript>
+        </div>
+      </section>
+
+
+      <figure class="architecture-poster" id="full-diagram">
+        <a href="assets/docker-architecture.png" target="_blank" rel="noopener" aria-label="Open the complete Docker architecture diagram at full size">
+          <img src="assets/docker-architecture.png" width="1536" height="1024" fetchpriority="high" alt="Complete Docker architecture. The client sends commands to the Engine API and dockerd. Buildx uses BuildKit to produce images. The host pushes images to a registry and pulls missing images. The daemon coordinates containerd, a shim and runc to launch containers, which connect to networks, mount volumes, and share the Linux kernel.">
+        </a>
+        <figcaption>
+          <div class="poster-actions"><a href="assets/docker-architecture.png" target="_blank" rel="noopener">Open full-size image ↗</a><a href="assets/docker-architecture.png" download="docker-architecture.png">Download diagram PNG ↓</a><a href="#arch-trace">Play the run workflow →</a></div>
+          <p>Follow the arrows from the client through the Docker host. The registry stores images for sharing, while the host creates and runs containers.</p>
+          <details><summary>Read the complete diagram</summary>
+            <p><strong>Build.</strong> From PowerShell, the Docker CLI uses Buildx to submit a Dockerfile and build context to BuildKit. With the default local builder, the resulting image becomes available in the host’s image store. Other builder configurations can export directly to a registry.</p>
+            <p><strong>Share.</strong> Tag and push an image to a repository in Docker Hub or a private registry. Another host can pull that image into its own image store.</p>
+            <p><strong>Run.</strong> The CLI sends the request through the Engine API to dockerd. With the default pull policy, Docker pulls the image if it is missing locally, prepares a container and its networking, and coordinates its launch through containerd. The shim supervises the container process, while runc sets up and starts it.</p>
+            <p><strong>Host resources.</strong> Containers connect to networks and can mount volumes for persistent data. The Linux kernel supplies namespaces for isolation and cgroups for resource control. Docker Desktop provides the Linux environment on Windows 11.</p>
+          </details>
+        </figcaption>
+      </figure>
+
+
+
+      <section class="topic" id="arch-trace" style="--accent:#08776a;--tint:#e6f6f2">
+        <p class="kicker">Animated workflow</p>
+        <h3>Follow one <code>docker run</code> request</h3>
+        <p>Trace the Nginx command from <a href="docker.html#win-web">Topic 5</a> using Docker’s default pull policy. The first run starts with an empty image store. On a later run, which step can Docker skip?</p>
+        <div class="codebox"><div class="code-label">RUN NGINX</div><pre>docker run -d --name class-web -p 127.0.0.1:8080:80 nginx:alpine</pre></div>
+        <figure class="arch-flow" id="arch-player">
+          <div class="arch-map">
+            <svg viewBox="0 0 360 330" role="img" aria-labelledby="arch-map-title arch-map-desc">
+              <title id="arch-map-title">From PowerShell to a running Nginx container</title>
+              <desc id="arch-map-desc">The client calls the daemon. The daemon checks the local image store, which receives missing image layers from the registry. The daemon coordinates creation and the runtime launches Nginx.</desc>
+              <defs><marker id="arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#84afa9"/></marker></defs>
+              <rect class="arch-host" x="3" y="108" width="354" height="218" rx="14"/>
+              <text class="arch-host-label" x="180" y="126">DOCKER HOST</text>
+              <g class="arch-paths" marker-end="url(#arch-arrow)">
+                <path data-route="request" d="M83 77v60"/>
+                <path data-route="lookup" d="M155 167h50"/>
+                <path data-route="fetch" d="M277 77v60"/>
+                <path data-route="create" d="M83 197v60"/>
+                <path data-route="start" d="M155 287h50"/>
+              </g>
+              <g class="arch-node" data-node="client" transform="translate(11 17)"><rect/><text x="72" y="25">Docker CLI</text><text class="sub" x="72" y="45">PowerShell</text></g>
+              <g class="arch-node" data-node="registry" transform="translate(205 17)"><rect/><text x="72" y="25">Registry</text><text class="sub" x="72" y="45">Docker Hub</text></g>
+              <g class="arch-node" data-node="daemon" transform="translate(11 137)"><rect/><text x="72" y="25">Daemon</text><text class="sub" x="72" y="45">dockerd</text></g>
+              <g class="arch-node" data-node="store" transform="translate(205 137)"><rect/><text x="72" y="25">Image store</text><text class="sub" x="72" y="45">on the Docker host</text></g>
+              <g class="arch-node" data-node="runtime" transform="translate(11 257)"><rect/><text x="72" y="25">Runtime</text><text class="sub" x="72" y="45">containerd · runc</text></g>
+              <g class="arch-node" data-node="web" transform="translate(205 257)"><rect/><text x="72" y="25">Container</text><text class="sub" x="72" y="45">Nginx process</text></g>
+            </svg>
+          </div>
+          <div class="arch-sequence">
+            <label class="arch-cache" hidden><input type="checkbox"> Image already on host</label>
+            <ol aria-label="Run sequence">
+              <li data-route="request" data-nodes="client daemon"><strong>Send the request.</strong> The CLI asks the daemon to create and start <code>class-web</code> with the given port mapping.</li>
+              <li data-route="lookup" data-nodes="daemon store"><strong>Check the image.</strong> Docker looks for <code>nginx:alpine</code> in this host’s image store.</li>
+              <li data-route="fetch" data-nodes="registry store"><strong>Pull the missing image.</strong> Docker resolves the tag at the registry and downloads any layers the host still needs.</li>
+              <li data-route="create" data-nodes="daemon runtime"><strong>Prepare the container.</strong> Docker sets up the writable layer and networking, then hands the launch to containerd.</li>
+              <li data-route="start" data-nodes="runtime web"><strong>Start Nginx.</strong> On a typical Linux engine, containerd uses a shim and runc to launch the process. With <code>-d</code>, the CLI returns the container ID while Nginx keeps running.</li>
+            </ol>
+          </div>
+          <figcaption>After startup, requests to <code>127.0.0.1:8080</code> reach Nginx on port 80 through the published port. Once Nginx is running, the browser can load the page even if the registry is offline.</figcaption>
+          <div class="arch-controls" hidden>
+            <button type="button" data-action="back">Previous step</button>
+            <button type="button" data-action="play">Play flow</button>
+            <button type="button" data-action="next">Next step</button>
+            <output aria-live="polite"></output>
+          </div>
+        </figure>
+        <p class="source"><a href="https://www.blacksmith.sh/blog/docker-architecture-the-components-and-processes-part-1">Blacksmith’s walkthrough of Docker processes</a> · <a href="https://www.sysdig.com/learn-cloud-native/what-is-docker-architecture">Sysdig’s architecture guide</a> · <a href="runtime.html">Explore the runtime stack</a></p>
+      </section>
+
+      <section class="topic" id="arch-objects" style="--accent:#805092;--tint:#f6edf9">
+        <p class="kicker">Docker objects</p>
+        <h3>What does the host keep?</h3>
+        <div class="table-scroll"><table><thead><tr><th>Object</th><th>Role in the class web demo</th><th>Inspect it</th></tr></thead><tbody>
+          <tr><td>Image</td><td>The local Nginx filesystem layers and startup configuration can supply many containers.</td><td><code>docker image ls</code></td></tr>
+          <tr><td>Container</td><td><code>class-web</code> has its own ID, writable layer, and lifecycle. Its record remains after a stop until it is removed.</td><td><code>docker ps -a</code></td></tr>
+          <tr><td>Network</td><td>The container joins a Docker network. Publishing a port makes its web server reachable from the laptop.</td><td><code>docker network inspect bridge</code></td></tr>
+          <tr><td>Volume</td><td>A named volume can keep database files across container replacements. The Nginx demo needs no named volume.</td><td><code>docker volume ls</code></td></tr>
+        </tbody></table></div>
+        <p>While <code>class-web</code> is running, compare its entry in <code>docker ps</code> with <code>docker image ls</code>. After the <a href="docker.html#win-manage">Topic 5 cleanup</a>, the container disappears and the image is available for the next run.</p>
+        <p class="source"><a href="https://nitizsharma.com/docker-architecture-components/">Nitiz Sharma’s component guide</a> · <a href="https://dev.to/meghasharmaaaa/-22j1">Docker networks, volumes, and images on DEV</a></p>
+      </section>
+
+      <section class="topic" id="arch-delivery" style="--accent:#99541e;--tint:#fff2e6">
+        <p class="kicker">Build and delivery</p>
+        <h3>How does a team ship its own image?</h3>
+        <p>Suppose your team adds an <code>index.html</code> to the class web demo. Save these two lines as <code>Dockerfile</code> next to that page, and build from that directory.</p>
+        <div class="codebox"><div class="code-label">Dockerfile</div><pre>FROM nginx:alpine
+COPY index.html /usr/share/nginx/html/index.html</pre></div>
+        <ol class="steps">
+          <li><strong>Build.</strong> <code>docker build -t class-site:1 .</code> gives the builder access to the current directory. Buildx submits the build to BuildKit, which reads the Dockerfile, reuses available layers, and produces the image.</li>
+          <li><strong>Tag and push.</strong> To share it, tag <code>class-site:1</code> with a repository you can publish to. For a Docker Hub account named <code>exampleteam</code>, the reference could be <code>exampleteam/class-site:1</code>. After authenticating, the team pushes that reference to its registry.</li>
+          <li><strong>Pull and run.</strong> A second Docker host pulls the published image. Each container created from that image starts with the same page. A new page release requires a new build and a replacement container.</li>
+        </ol>
+        <p>With a backend and database, Compose can describe the services, their shared network, and a database volume in one file. The Engine manages the resulting containers on the selected host.</p>
+        <p class="source"><a href="https://docs.docker.com/build/concepts/overview/">Docker Build documentation</a> · <a href="https://nitizsharma.com/docker-architecture-components/">Build, pull, run, and Compose</a></p>
+      </section>
+
+      <section class="topic" id="arch-check" style="--accent:#4a652d;--tint:#f1f7e9">
+        <p class="kicker">Check your understanding</p>
+        <h3>Predict the second run</h3>
+        <p>You stop and remove <code>class-web</code>, leave <code>nginx:alpine</code> on the same host, then run the original command again. With the default pull policy, which component can Docker skip, and what gets created again?</p>
+        <details class="arch-answer"><summary>Show the answer</summary><p>Docker can skip the registry because the tagged image is local. It creates a fresh container with a new ID and writable layer, publishes its port, and starts a new Nginx process. Select “Image already on host” in the <a href="#arch-trace">animated workflow</a> to follow this path.</p></details>
+        <p class="source">Further study · <a href="https://www.youtube.com/watch?v=8wFDvqAbB9Q">Watch the supplied YouTube video</a> · <a href="https://medium.com/@sazanu/understanding-docker-architecture-and-workflow-6c73158f8988">Understanding Docker Architecture and Workflow on Medium</a></p>
+      </section>
+      </section>
+
+      <footer class="finish"><a href="docker-commands.html">Continue to Topic 7 · Basic Docker commands</a> · <a href="docker.html#course-topics">Back to Docker topics</a> · <a href="index.html">All courses</a></footer>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const player = document.getElementById('arch-player');
+      const cacheOption = player.querySelector('.arch-cache');
+      const cached = cacheOption.querySelector('input');
+      const controls = player.querySelector('.arch-controls');
+      const previous = controls.querySelector('[data-action="back"]');
+      const play = controls.querySelector('[data-action="play"]');
+      const next = controls.querySelector('[data-action="next"]');
+      const status = controls.querySelector('output');
+      const steps = [...player.querySelectorAll('.arch-sequence li')];
+      const paths = player.querySelectorAll('.arch-paths path');
+      const nodes = player.querySelectorAll('.arch-node');
+      let sequence = steps;
+      let position = 0;
+      let timer = null;
+
+      function render() {
+        const current = sequence[position];
+        const activeNodes = current.dataset.nodes.split(' ');
+        const atEnd = position === sequence.length - 1;
+        for (const step of steps) {
+          step.classList.toggle('is-current', step === current);
+          if (step === current) step.setAttribute('aria-current', 'step');
+          else step.removeAttribute('aria-current');
+        }
+        for (const path of paths) {
+          path.classList.toggle('is-current', path.dataset.route === current.dataset.route);
+        }
+        for (const node of nodes) {
+          node.classList.toggle('is-current', activeNodes.includes(node.dataset.node));
+        }
+        player.classList.toggle('is-playing', timer !== null);
+        previous.disabled = position === 0;
+        next.disabled = atEnd;
+        play.textContent = timer !== null ? 'Pause flow' : atEnd ? 'Replay flow' : 'Play flow';
+        status.value = 'Step ' + (position + 1) + ' of ' + sequence.length + ' · ' + current.querySelector('strong').textContent;
+      }
+
+      function pause() {
+        clearInterval(timer);
+        timer = null;
+      }
+
+      function move(delta) {
+        pause();
+        position += delta;
+        render();
+      }
+
+      function resetSequence() {
+        pause();
+        position = 0;
+        for (const step of steps) {
+          step.hidden = cached.checked && step.dataset.route === 'fetch';
+        }
+        sequence = steps.filter(step => !step.hidden);
+        player.classList.toggle('image-cached', cached.checked);
+        render();
+      }
+
+      previous.addEventListener('click', () => move(-1));
+      next.addEventListener('click', () => move(1));
+      cached.addEventListener('change', resetSequence);
+      play.addEventListener('click', () => {
+        if (timer !== null) {
+          pause();
+        } else {
+          if (position === sequence.length - 1) position = 0;
+          timer = setInterval(() => {
+            position += 1;
+            if (position === sequence.length - 1) pause();
+            render();
+          }, 3000);
+        }
+        render();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && timer !== null) {
+          pause();
+          render();
+        }
+      });
+      resetSequence();
+      cacheOption.hidden = false;
+      controls.hidden = false;
+    })();
+  </script>
+</body>
+</html>
