@@ -1,0 +1,8 @@
+@layer theme, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+@source "../docker-hands-on-training.html";
+.lesson-diagram, .lesson-diagram * { box-sizing: border-box; }
+.lesson-diagram { color: #14263b; }
+#sim-log { max-height: 240px; overflow: auto; color: #86efac; }
+@media print { .lesson-diagram { break-inside: avoid; } }
