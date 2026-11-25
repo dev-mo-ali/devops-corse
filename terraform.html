@@ -97,10 +97,19 @@ provider &quot;aws&quot; {
 <p><code>~&gt; 5.0</code> permits versions from 5.0 up to, but excluding, 6.0. <code>~&gt; 5.31.0</code> permits 5.31.x releases but excludes 5.32.0. An exact constraint such as <code>5.31.0</code> allows only that version.</p>
 <p>Backend settings are initialized before normal resource evaluation, so they cannot use ordinary input variables or resource references. A configuration cannot use both a <code>backend</code> block and a <code>cloud</code> block. See the <a href="https://developer.hashicorp.com/terraform/language/block/terraform" target="_blank" rel="noopener noreferrer">Terraform block reference</a>.</p></section>
 <section class="slide lesson" id="slide-4" data-anchor="3-the-dependency-lock-file" data-topic="0" aria-label="Lesson 3 of 35" aria-hidden="true" style="--topic:#7352a6;--tint:#f2ecf9"><div class="eyebrow">Architecture and workflow · LESSON 03 / 35</div><h1 tabindex="-1">The dependency lock file</h1><p><code>terraform init</code> creates or updates <code>.terraform.lock.hcl</code> to record selected provider versions and package checksums.</p>
+<h3>Location and ownership</h3>
+<p>The filename is always <code>.terraform.lock.hcl</code>. It belongs to the whole configuration and lives alongside the root module&#x27;s <code>.tf</code> files in the working directory, rather than inside each child module.</p>
+<h3>How initialization selects a provider</h3>
+<p>Terraform considers both the configuration&#x27;s version constraints and any recorded selection:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Situation</th><th scope="col">Result</th></tr></thead><tbody><tr><td>No locked selection for this provider</td><td>Select the newest available version satisfying all applicable constraints, then record it.</td></tr><tr><td>A compatible version is already locked</td><td>Reuse that version, even when a newer release exists.</td></tr><tr><td>Run <code>terraform init -upgrade</code></td><td>Reconsider the selection and choose the newest version allowed by the constraints.</td></tr></tbody></table></div>
+<h3>What the file records</h3>
 <p>Its main fields are:</p>
 <div class="table-wrap"><table><thead><tr><th scope="col">Field</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td><code>version</code></td><td>The selected provider version</td></tr><tr><td><code>constraints</code></td><td>The version constraints considered when selecting it</td></tr><tr><td><code>hashes</code></td><td>Accepted checksums for provider packages</td></tr></tbody></table></div>
+<h3>Checksum verification</h3>
+<p>When previously recorded checksums exist, an installed provider package must match at least one of them. If none match, Terraform reports an installation error. Investigate the package source and platform checksums before changing the lock file.</p>
 <p>Commit this file to Git. Do not commit the downloaded <code>.terraform/</code> directory. The lock file coordinates provider selections across machines; checksums help detect unexpected package changes. They do not guarantee that a provider is safe or that entire environments are identical.</p>
 <p><strong>The lock file tracks providers, not remote module versions.</strong> Pin registry module versions separately and use stable Git references.</p>
+<h3>Deliberate upgrades</h3>
 <p>To intentionally reconsider dependency selections within the configured constraints:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform init -upgrade</code></pre></div>
 <p>Review the resulting lock-file changes and infrastructure plan. Without <code>-upgrade</code>, initialization normally reuses compatible locked provider selections. If a changed constraint excludes the locked version, Terraform requires an upgrade rather than silently choosing another version.</p>
@@ -134,13 +143,35 @@ terraform destroy</code></pre></div>
 <p>State can contain secrets. Keep it out of Git, protect access, and enable encryption where the storage system supports it. Losing state does not immediately delete cloud resources, but reconstructing their Terraform associations can require recovery or import work.</p></section>
 <section class="slide lesson" id="slide-7" data-anchor="6-large-infrastructures-refresh-and-targeting" data-topic="0" aria-label="Lesson 6 of 35" aria-hidden="true" style="--topic:#7352a6;--tint:#f2ecf9"><div class="eyebrow">Architecture and workflow · LESSON 06 / 35</div><h1 tabindex="-1">Large infrastructures refresh and targeting</h1><p>Large configurations can make planning slow because of provider API calls, graph evaluation, and the amount of state being processed. They can also expose many unrelated resources to a single mistaken change.</p>
 <p>Separate independently managed layers into root configurations with distinct states when appropriate. Child modules organize code, but calling several child modules from one root does <strong>not</strong> automatically give each module its own state.</p>
+<h3>Large infrastructure and API limits</h3>
+<p>A normal plan refreshes managed objects through provider APIs. With many EC2 instances, security groups, subnets, and buckets, these requests can encounter service throttling or API rate limits.</p>
+<p>For example, a project might use these independently managed roots:</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>infrastructure/
+  network/      # VPC, subnets, security groups; its own state
+  compute/      # EC2 and load balancer; its own state
+  database/     # RDS; its own state
+  storage/      # S3; its own state</code></pre></div>
+<p>Each directory contains its own root configuration and is initialized, planned, and applied separately. With a remote backend, give each root a distinct state location. Merely putting <code>ec2.tf</code>, <code>subnets.tf</code>, and <code>s3.tf</code> in the same directory still produces one root configuration using the same state.</p>
+<p>Smaller states reduce the scope of each run, but do not increase AWS API quotas; simultaneous runs can still be throttled. Choose boundaries by ownership and lifecycle, and explicitly pass shared values such as subnet IDs between roots. Existing resources need a planned state migration; moving configuration files alone does not transfer their state associations.</p>
 <h3>Skip refresh deliberately</h3>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform plan -refresh=false</code></pre></div>
 <p>This skips the normal refresh of managed resources and relies on recorded information. It can miss changes made outside Terraform and produce an incomplete or misleading plan. It does not guarantee that no API calls occur.</p>
+<p>For example, an EC2 instance changed manually in AWS may still appear with its old attributes in this plan. Data sources such as <code>aws_region</code> or <code>aws_availability_zones</code> may still be evaluated and read; disabling managed-resource refresh is not an offline mode.</p>
 <p><code>lifecycle { ignore_changes = all }</code> is not a refresh control. It changes how Terraform plans updates to resource attributes.</p>
 <h3>Target an exceptional operation</h3>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform plan -target=aws_instance.app_server</code></pre></div>
-<p>Targeting includes the selected resource and dependencies required for it; it is not guaranteed to affect only one object. Reserve it for recovery or exceptional situations. After a targeted apply, run a full plan to identify remaining changes. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/plan" target="_blank" rel="noopener noreferrer">planning options</a>.</p></section>
+<p>Targeting includes the selected resource and dependencies required for it; it is not guaranteed to affect only one object. Reserve it for recovery or exceptional situations. After a targeted apply, run a full plan to identify remaining changes. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/plan" target="_blank" rel="noopener noreferrer">planning options</a>.</p>
+<h3>S3 example: targeting with and without refresh</h3>
+<p>Assume the configuration already declares <code>resource &quot;aws_s3_bucket&quot; &quot;course_bucket&quot;</code>. The address is <code>aws_s3_bucket.course_bucket</code>: the resource type plus its local label, not the AWS bucket name or a <code>.tf</code> filename.</p>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Plan the bucket and its dependencies, with normal refresh.
+terraform plan -target=aws_s3_bucket.course_bucket
+
+# Exceptional diagnostic use: target while skipping normal refresh.
+terraform plan -refresh=false -target=aws_s3_bucket.course_bucket
+
+# Return to a complete plan with normal refresh.
+terraform plan</code></pre></div>
+<p>The combined command can omit unrelated changes and miss drift in the targeted objects. Neither command applies changes. For routine independent deployments, use separate root configurations and states rather than repeatedly targeting part of one large state.</p></section>
 <section class="slide lesson" id="slide-8" data-anchor="7-provisioners-and-connections" data-topic="1" aria-label="Lesson 7 of 35" aria-hidden="true" style="--topic:#087fa3;--tint:#e9f7fc"><div class="eyebrow">Providers and operations · LESSON 07 / 35</div><h1 tabindex="-1">Provisioners and connections</h1><p>Provisioners execute actions alongside a resource&#x27;s lifecycle. Terraform does not model the resulting software configuration as thoroughly as it models provider-managed resources.</p>
 <div class="table-wrap"><table><thead><tr><th scope="col">Provisioner</th><th scope="col">Where it operates</th><th scope="col">Typical purpose</th></tr></thead><tbody><tr><td><code>local-exec</code></td><td>The machine running Terraform</td><td>Run a local command</td></tr><tr><td><code>remote-exec</code></td><td>A remote host through SSH or WinRM</td><td>Run remote commands</td></tr><tr><td><code>file</code></td><td>Copies from the execution machine to a remote host</td><td>Transfer a file or directory</td></tr></tbody></table></div>
 <h3>Local execution</h3>
@@ -441,6 +472,7 @@ resource &quot;aws_security_group&quot; &quot;app&quot; {
 }</code></pre></div>
 <p>This generates ingress rules, not multiple security groups. Do not combine inline rules with separately managed rules for the same group without understanding the provider&#x27;s ownership behavior. Dynamic blocks cannot generate lifecycle meta-arguments.</p></section>
 <section class="slide lesson" id="slide-18" data-anchor="17-local-modules-and-module-inputs" data-topic="3" aria-label="Lesson 17 of 35" aria-hidden="true" style="--topic:#c02675;--tint:#fdf2f8"><div class="eyebrow">Modules and reuse · LESSON 17 / 35</div><h1 tabindex="-1">Local modules and module inputs</h1><p>A module is a directory of Terraform configuration files. The root module is the configuration you run; child modules are called from it. Modules let you package a useful infrastructure capability and reuse it with different inputs.</p>
+<p>A module contains <code>.tf</code> and/or <code>.tf.json</code> files in one directory. Subdirectories are separate modules; Terraform does not automatically include them. A child can also call other children. In the layout below, <code>my-terraform-project/</code> is the root and <code>modules/ec2_server/</code> is a local child module.</p>
 <div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>my-terraform-project/
   versions.tf
   main.tf
@@ -513,7 +545,20 @@ output &quot;private_ip&quot; {
 output &quot;development_private_ip&quot; {
   value = module.development_server.private_ip
 }</code></pre></div>
-<p>The child uses the default <code>t3.micro</code>. Another call can pass <code>instance_type = &quot;t3.medium&quot;</code>. Root <code>.tfvars</code> values do not automatically flow into children: pass inputs explicitly in the module call.</p></section>
+<p>The child uses the default <code>t3.micro</code>. Another call can pass <code>instance_type = &quot;t3.medium&quot;</code>. Root <code>.tfvars</code> values do not automatically flow into children: pass inputs explicitly in the module call.</p>
+<h3>Reuse the module and override a default</h3>
+<p>Add this second call alongside <code>development_server</code> to reuse the same child code with different arguments:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;staging_server&quot; {
+  source = &quot;./modules/ec2_server&quot;
+
+  ami_id        = var.ami_id
+  subnet_id     = var.subnet_id
+  server_name   = &quot;staging-web&quot;
+  instance_type = &quot;t3.medium&quot;
+}</code></pre></div>
+<div class="table-wrap"><table><thead><tr><th scope="col">Call</th><th scope="col">Supplied instance type</th><th scope="col">Effective child value</th></tr></thead><tbody><tr><td><code>development_server</code></td><td>Omitted</td><td>Default: <code>t3.micro</code></td></tr><tr><td><code>staging_server</code></td><td><code>t3.medium</code></td><td>Explicit argument: <code>t3.medium</code></td></tr></tbody></table></div>
+<p>Both calls would manage separate EC2 instances if applied. A required child input with no default must be supplied in the call. Use inputs for environment-specific settings such as the AMI, subnet, and instance size; constants remain appropriate for intentional internal choices.</p>
+<p>The <code>./</code> path is relative to the calling module&#x27;s directory. Run <code>terraform init</code> after adding a module call. See <a href="https://developer.hashicorp.com/terraform/language/block/module" target="_blank" rel="noopener noreferrer">module calls</a> and <a href="https://developer.hashicorp.com/terraform/language/values/variables" target="_blank" rel="noopener noreferrer">input variables</a>.</p></section>
 <section class="slide lesson" id="slide-19" data-anchor="18-module-locals-and-child-outputs" data-topic="3" aria-label="Lesson 18 of 35" aria-hidden="true" style="--topic:#c02675;--tint:#fdf2f8"><div class="eyebrow">Modules and reuse · LESSON 18 / 35</div><h1 tabindex="-1">Module locals and child outputs</h1><p>Use locals inside a module to derive names, tags, or settings from its inputs:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Requires app_name, environment, and instance_tier inputs in this module.
 locals {
@@ -531,6 +576,10 @@ locals {
   })
 }</code></pre></div>
 <p>Keep this internal logic close to the resources that use it. Use explicit inputs for choices the caller should control. If building S3 names, also account for naming rules and global uniqueness.</p>
+<h3>Locals versus input variables</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Feature</th><th scope="col">Input variable</th><th scope="col">Local value</th></tr></thead><tbody><tr><td>Declare</td><td><code>variable &quot;instance_type&quot; { ... }</code></td><td><code>locals { instance_type = &quot;t3.micro&quot; }</code></td></tr><tr><td>Reference inside this module</td><td><code>var.instance_type</code></td><td><code>local.instance_type</code></td></tr><tr><td>Set directly through a child-module call</td><td>Yes, when declared as an input</td><td>No</td></tr><tr><td>Main purpose</td><td>Expose a caller-configurable setting</td><td>Name and reuse an internal expression</td></tr></tbody></table></div>
+<p>A literal local such as <code>instance_type = &quot;t3.micro&quot;</code> is fixed by the module code. A local derived from <code>var.instance_tier</code>, as above, changes when that input changes. Locals are expressions, not mutable storage or values guaranteed to stay identical between runs; some remain unknown until resource attributes are available.</p>
+<p>Passing <code>instance_type</code> to a child that declares only a local with that name produces an unsupported-argument error. If the child declares an input but the resource uses an unrelated constant local, changing that input does not change the resource&#x27;s instance type. Locals provide encapsulation, not a security or policy boundary. See <a href="https://developer.hashicorp.com/terraform/language/values/locals" target="_blank" rel="noopener noreferrer">local values</a>.</p>
 <h3>Connect two child modules</h3>
 <p>Inside a network child module:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>output &quot;subnet_id&quot; {
@@ -551,7 +600,31 @@ module &quot;application&quot; {
   server_name = &quot;application-web&quot;
 }</code></pre></div>
 <p>The expression <code>module.network.subnet_id</code> establishes the dependency on the resources producing that output. A sibling module cannot directly reach into another child&#x27;s internal resource namespace.</p>
-<p>Expose a child output through a root output when users or other root configurations need to consume it.</p></section>
+<p>Expose a child output through a root output when users or other root configurations need to consume it.</p>
+<h3>Reference a child security-group output</h3>
+<p>For a module call without <code>count</code> or <code>for_each</code>, use <code>module.&lt;MODULE_NAME&gt;.&lt;OUTPUT_NAME&gt;</code>. The module name is the call&#x27;s label, and the output name is declared by the child. Internal resource names are not part of this public reference.</p>
+<p>Suppose <code>modules/sg</code> already declares <code>aws_security_group.app</code> and accepts a <code>vpc_id</code> input. Add this to its <code>outputs.tf</code>:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>output &quot;sg_id&quot; {
+  description = &quot;Security group ID for application instances.&quot;
+  value       = aws_security_group.app.id
+}</code></pre></div>
+<p>In the parent, with the AWS provider configured and <code>vpc_id</code>, <code>subnet_id</code>, and <code>ami_id</code> inputs declared:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;sgmodule&quot; {
+  source = &quot;./modules/sg&quot;
+  vpc_id = var.vpc_id
+}
+
+resource &quot;aws_instance&quot; &quot;myapp&quot; {
+  ami                    = var.ami_id
+  instance_type          = &quot;t3.micro&quot;
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = [module.sgmodule.sg_id]
+}
+
+output &quot;application_security_group_id&quot; {
+  value = module.sgmodule.sg_id
+}</code></pre></div>
+<p>Use a subnet in the same VPC as the security group. The brackets form the collection expected by <code>vpc_security_group_ids</code>. The output reference creates the dependency automatically. The final root output also makes the value available through <code>terraform output</code>; child outputs are not automatically listed by that command. These snippets illustrate the connection and assume the child resource and inputs already exist. See <a href="https://developer.hashicorp.com/terraform/language/values/outputs" target="_blank" rel="noopener noreferrer">module outputs</a>.</p></section>
 <section class="slide lesson" id="slide-20" data-anchor="19-registry-modules-sources-and-versions" data-topic="3" aria-label="Lesson 19 of 35" aria-hidden="true" style="--topic:#c02675;--tint:#fdf2f8"><div class="eyebrow">Modules and reuse · LESSON 19 / 35</div><h1 tabindex="-1">Registry modules sources and versions</h1><p>The public Terraform Registry provides modules and providers from different publishers. Registry publication alone does not prove that a module is official, secure, or suitable for your environment. Review its publisher, documentation, dependencies, and code.</p>
 <h3>Registry example</h3>
 <p>This uses the historical module version from the source document:</p>
@@ -574,30 +647,90 @@ module &quot;application&quot; {
 }</code></pre></div>
 <p>NAT gateways are disabled here to keep this networking example smaller. The private subnets therefore do not gain internet access through a NAT gateway. Read the selected module version&#x27;s requirements before use.</p>
 <h3>Module sources</h3>
-<div class="table-wrap"><table><thead><tr><th scope="col">Source</th><th scope="col">Example</th></tr></thead><tbody><tr><td>Local directory</td><td><code>./modules/ec2_server</code></td></tr><tr><td>Public registry</td><td><code>terraform-aws-modules/vpc/aws</code></td></tr><tr><td>Private registry</td><td><code>app.terraform.io/my-company/secure-s3/aws</code></td></tr><tr><td>Git repository</td><td><code>git::https://github.com/example/terraform-aws-ec2.git?ref=v1.2.0</code></td></tr><tr><td>HTTPS archive</td><td><code>https://modules.example.com/ec2-module.zip</code></td></tr><tr><td>S3 archive</td><td><code>s3::https://s3.amazonaws.com/example-modules/vpc.zip</code></td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th scope="col">Source</th><th scope="col">Example</th></tr></thead><tbody><tr><td>Local directory</td><td><code>./modules/ec2_server</code></td></tr><tr><td>Public registry</td><td><code>terraform-aws-modules/vpc/aws</code></td></tr><tr><td>Private registry</td><td><code>app.terraform.io/my-company/secure-s3/aws</code></td></tr><tr><td>GitHub over HTTPS</td><td><code>github.com/example/terraform-aws-ec2?ref=v1.2.0</code></td></tr><tr><td>Bitbucket Git repository</td><td><code>git::https://bitbucket.org/example/terraform-aws-ec2.git?ref=v1.2.0</code></td></tr><tr><td>Other Git repository</td><td><code>git::https://git.example.com/team/terraform-aws-ec2.git?ref=v1.2.0</code></td></tr><tr><td>HTTPS archive</td><td><code>https://modules.example.com/ec2-module.zip</code></td></tr><tr><td>S3 archive</td><td><code>s3::https://s3.amazonaws.com/example-modules/vpc.zip</code></td></tr></tbody></table></div>
 <p>Example domains and repositories are placeholders. The <code>version</code> argument applies to registry module sources. For Git, use <code>?ref=</code> with a reviewed commit or release tag; a branch name remains mutable.</p>
-<p>Run <code>terraform init</code> after changing dependencies. Review upgrades deliberately. The provider lock file does not lock module versions, so module source constraints are essential for reproducibility.</p></section>
+<h3>GitHub source over HTTPS or SSH</h3>
+<p>The module&#x27;s <code>source</code> argument identifies where Terraform retrieves its code. Choose one of these alternative calls, replace the example repository, and supply the module&#x27;s required inputs.</p>
+<p><strong>HTTPS:</strong></p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;ec2_server&quot; {
+  source = &quot;git::https://github.com/example/terraform-aws-ec2.git?ref=v1.2.0&quot;
+  # Add the inputs required by this module.
+}</code></pre></div>
+<p><strong>SSH:</strong></p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;ec2_server&quot; {
+  source = &quot;git::ssh://git@github.com/example/terraform-aws-ec2.git?ref=v1.2.0&quot;
+  # Add the inputs required by this module.
+}</code></pre></div>
+<p>GitHub also supports the HTTPS shorthand <code>github.com/example/terraform-aws-ec2</code> and SSH form <code>git@github.com:example/terraform-aws-ec2.git</code>. Terraform invokes Git to retrieve Git sources. Private repositories require suitable Git credentials or SSH access on the machine running Terraform, including a CI runner. Keep credentials outside the source URL. See the <a href="https://developer.hashicorp.com/terraform/language/block/module#source" target="_blank" rel="noopener noreferrer">module source reference</a>.</p>
+<h3>Select a branch, tag, or commit with ref</h3>
+<p>Without <code>?ref=</code>, Git sources use the repository&#x27;s default branch referenced by <code>HEAD</code>; it is not necessarily named <code>main</code> or <code>master</code>. Put <code>ref</code> in the source URL as a query parameter, not as a separate module input.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Selection</th><th scope="col">Source URL suffix</th><th scope="col">Meaning</th></tr></thead><tbody><tr><td>Branch</td><td><code>?ref=development</code></td><td>Follow the branch when retrieving or updating the module; its commit can change</td></tr><tr><td>Tag</td><td><code>?ref=v1.2.0</code></td><td>Select a named release; a tag can still be moved</td></tr><tr><td>Commit</td><td><code>?ref=FULL_COMMIT_SHA</code></td><td>Select a specific revision; replace the placeholder with an actual full commit hash</td></tr></tbody></table></div>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;development_server&quot; {
+  source = &quot;git::https://github.com/example/terraform-aws-ec2.git?ref=development&quot;
+  # Add the inputs required by this module.
+}</code></pre></div>
+<p>For a module inside a repository, use a double slash before the subdirectory and put the query last: <code>git::https://github.com/example/infrastructure-modules.git//modules/ec2?ref=v1.2.0</code>.</p>
+<p>Run <code>terraform init</code> after changing dependencies. Review upgrades deliberately. The provider lock file does not lock module versions, so module source constraints are essential for reproducibility.</p>
+<p>An installed module is cached; a new commit on its branch is not automatically downloaded by every plan. <code>terraform init -upgrade</code> can update installed modules and providers, so review all resulting dependency changes. See <a href="https://developer.hashicorp.com/terraform/language/modules/configuration#install-a-specific-version-of-the-module" target="_blank" rel="noopener noreferrer">installing module versions</a>.</p></section>
 <section class="slide lesson" id="slide-21" data-anchor="20-cli-workspaces" data-topic="4" aria-label="Lesson 20 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 20 / 35</div><h1 tabindex="-1">CLI workspaces</h1><p>CLI workspaces maintain separate states for the same configuration. They can support similar temporary or test deployments.</p>
-<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform workspace show
+<h3>Start with the default workspace</h3>
+<p>Without creating additional workspaces, you use <code>default</code>. A working directory describes the resources managed by that configuration, not every resource in an AWS account. With the default local backend settings, its state is saved as <code>terraform.tfstate</code> alongside the configuration. State is stored elsewhere when a remote backend is configured.</p>
+<h3>Create and switch workspaces</h3>
+<p>Run these commands in an initialized working directory. The names <code>dev</code> and <code>staging</code> must not already exist when running <code>new</code>:</p>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform workspace -help
+terraform workspace show
 terraform workspace list
 terraform workspace new dev
 terraform workspace new staging
 terraform workspace select dev</code></pre></div>
+<div class="table-wrap"><table><thead><tr><th scope="col">Command</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td><code>terraform workspace new NAME</code></td><td>Create and select a workspace</td></tr><tr><td><code>terraform workspace list</code></td><td>List workspaces; <code>*</code> marks the selected one</td></tr><tr><td><code>terraform workspace show</code></td><td>Print the selected workspace name</td></tr><tr><td><code>terraform workspace select NAME</code></td><td>Switch to an existing workspace</td></tr><tr><td><code>terraform workspace delete NAME</code></td><td>Delete an unused workspace after switching away</td></tr></tbody></table></div>
+<p>After the sequence above, <code>dev</code> is selected. A plain <code>workspace new</code> starts with empty state; it does not copy existing infrastructure or deploy resources. Switching workspaces does not move or destroy resources either. Subsequent plans use the selected state, so a fresh workspace can propose creating another set of resources.</p>
+<h3>One configuration, separate state files</h3>
 <p>Every configuration starts with a <code>default</code> workspace. With the local backend, non-default workspace states are normally stored under <code>terraform.tfstate.d/WORKSPACE_NAME/terraform.tfstate</code> in the working directory, not under <code>.terraform/</code>. Remote backends use backend-specific storage layouts.</p>
+<p>Example layout after state has been written, using default local-backend paths:</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>workspace-demo/
+  main.tf                   # Shared by all CLI workspaces
+  variables.tf              # Shared input declarations
+  .terraform.lock.hcl        # Shared provider selections
+  .terraform/               # Local initialization metadata and cache
+  terraform.tfstate         # default workspace state
+  terraform.tfstate.d/
+    dev/
+      terraform.tfstate
+    staging/
+      terraform.tfstate</code></pre></div>
+<p>The workspace subdirectories contain state, not separate copies of <code>main.tf</code>. Local backend paths can be customized; see the <a href="https://developer.hashicorp.com/terraform/language/backend/local" target="_blank" rel="noopener noreferrer">local backend reference</a>.</p>
+<h3>Choose settings for each workspace</h3>
 <p>Read the current name with <code>terraform.workspace</code>:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>locals {
   instance_type = terraform.workspace == &quot;prod&quot; ? &quot;t3.large&quot; : &quot;t3.micro&quot;
   name_prefix   = &quot;application-${terraform.workspace}&quot;
 }</code></pre></div>
+<p>Use <code>local.instance_type</code> and <code>local.name_prefix</code> in resource arguments for these expressions to affect resources. Creating a workspace named <code>prod</code> does not choose an instance size by itself. Likewise, selecting <code>dev</code> does not automatically load <code>dev.tfvars</code>; pass an appropriate variable file explicitly if using that approach.</p>
 <p>Workspaces separate state; they do not provide strong credential or access isolation. Separate root configurations and AWS accounts can reuse the same modules while enforcing different access boundaries.</p>
+<h3>Remove an unused workspace</h3>
 <p>To delete an unused workspace, first select another one:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform workspace select default
 terraform workspace delete staging</code></pre></div>
-<p>Normal deletion refuses a workspace with managed resources. A CLI workspace is also a different concept from an HCP Terraform workspace. See <a href="https://developer.hashicorp.com/terraform/cli/workspaces" target="_blank" rel="noopener noreferrer">CLI workspaces</a>.</p></section>
-<section class="slide lesson" id="slide-22" data-anchor="21-team-collaboration-and-git" data-topic="4" aria-label="Lesson 21 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 21 / 35</div><h1 tabindex="-1">Team collaboration and Git</h1><p>A common team workflow is:</p>
+<p>Normal deletion refuses a workspace with managed resources. A CLI workspace is also a different concept from an HCP Terraform workspace. See <a href="https://developer.hashicorp.com/terraform/cli/workspaces" target="_blank" rel="noopener noreferrer">CLI workspaces</a>.</p>
+<p>The <code>default</code> workspace cannot be deleted. Deleting a workspace is not a substitute for destroying its infrastructure. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/workspace/new" target="_blank" rel="noopener noreferrer">workspace creation</a> and <a href="https://developer.hashicorp.com/terraform/cli/commands/workspace/delete" target="_blank" rel="noopener noreferrer">workspace deletion</a> references.</p></section>
+<section class="slide lesson" id="slide-22" data-anchor="21-team-collaboration-and-git" data-topic="4" aria-label="Lesson 21 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 21 / 35</div><h1 tabindex="-1">Team collaboration and Git</h1><h3>Why use a shared VCS repository?</h3>
+<p>A version control system (VCS) such as Git records configuration changes. A shared remote repository lets colleagues work on the same project, review proposed changes, and recover committed work if a laptop is lost or damaged. Only pushed work is available from that remote; uncommitted or unpushed changes still need protection.</p>
+<p>Branches and pull requests provide a review history: who changed the infrastructure definition, what changed, and why. Reverting a Git commit changes the code, but does not itself roll back live infrastructure; review a new Terraform plan before applying the reverted configuration.</p>
+<h3>Collaboration learning path</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Topic</th><th scope="col">Where to study it</th></tr></thead><tbody><tr><td>Shared repositories, Git challenges, and <code>.gitignore</code></td><td>This lesson</td></tr><tr><td>Reusing versioned module sources</td><td><a href="terraform.html#slide-20">Lesson 19: module sources</a></td></tr><tr><td>Backends, S3 setup, migration, and locking</td><td><a href="terraform.html#slide-23">Lesson 22: backends and state locking</a></td></tr><tr><td>Inspecting and managing resource state</td><td><a href="terraform.html#slide-24">Lesson 23: state management commands</a></td></tr><tr><td>Reading outputs from another configuration</td><td><a href="terraform.html#slide-25">Lesson 24: sharing remote state outputs</a></td></tr></tbody></table></div>
+<h3>Code sharing and state sharing</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Team need</th><th scope="col">Mechanism</th></tr></thead><tbody><tr><td>Share configuration and review changes</td><td>Git repository and pull requests</td></tr><tr><td>Keep one authoritative resource record</td><td>Shared remote state backend</td></tr><tr><td>Prevent competing state writes</td><td>Backend-supported state locking</td></tr><tr><td>Control who can deploy</td><td>Provider credentials, permissions, and the execution workflow</td></tr></tbody></table></div>
+<p>Two teammates can clone identical code and still have conflicting local state files. Git does not coordinate Terraform writes or make concurrent applies safe. Use a properly configured shared backend, such as S3, with access controls and locking; keep state out of the source repository.</p>
+<h3>A typical team workflow</h3>
+<p>A common team workflow is:</p>
 <ol><li>Change configuration on a branch.</li><li>Run formatting, validation, and appropriate checks.</li><li>Generate a plan in the intended account and workspace.</li><li>Review the code and plan together.</li><li>Apply through the team&#x27;s approved execution process.</li><li>Keep state shared, protected, and locked during supported operations.</li></ol>
 <p>GitHub Actions, GitLab CI, and HCP Terraform can automate parts of this process. Automatic apply after merge is a configuration choice, not a universal behavior. VCS integration alone does not supply state locking; the execution and backend design must provide it.</p>
+<h3>Credentials and sensitive files</h3>
+<p>Do not embed access keys or secret values in committed provider blocks, backend settings, scripts, or variable files. Supply authentication through approved profiles, short-lived credentials, or protected runner settings. A private repository still needs this separation.</p>
+<p>Keeping a secret outside the repository does not guarantee that it stays out of Terraform artifacts. Resource attributes, input values, saved plans, logs, and state can contain sensitive data. <code>sensitive = true</code> redacts normal display but does not remove the value from state. Protect backend storage with restricted access, encryption, and recovery controls. See <a href="https://developer.hashicorp.com/terraform/language/manage-sensitive-data" target="_blank" rel="noopener noreferrer">sensitive data handling</a>.</p>
 <h3>Example gitignore</h3>
+<p>Create a <code>.gitignore</code> text file in the repository. Its patterns exclude matching untracked files from normal Git staging. Commit the ignore file so teammates share those rules. It does not encrypt files, prevent forced additions, or stop tracking files already in Git.</p>
 <div class="codebox"><div class="codebar"><span>gitignore</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Downloaded providers, modules, and local backend metadata
 .terraform/
 
@@ -626,12 +759,33 @@ terraform_debug.log
 id_rsa
 id_ed25519
 
+# Local overrides; explicitly allow reviewed shared overrides if needed
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
 # Local CLI credentials or configuration
 .terraformrc
 terraform.rc
 credentials.tfrc.json</code></pre></div>
-<p>Commit <code>.terraform.lock.hcl</code>, configuration, documentation, and non-secret examples. Some teams intentionally commit reviewed, non-secret variable files; adapt the patterns to that policy. <code>.gitignore</code> does not remove a secret that was already committed.</p></section>
+<p>Commit <code>.terraform.lock.hcl</code>, configuration, documentation, and non-secret examples. Some teams intentionally commit reviewed, non-secret variable files; adapt the patterns to that policy. <code>.gitignore</code> does not remove a secret that was already committed.</p>
+<p>The <code>!example.tfvars</code> rules are exceptions: inspect those files to ensure they contain only safe example values. The <code>.terraform/</code> pattern also matches directories with that name below the repository root. Add patterns for any differently named plan or credential files your workflow creates. Compare with <a href="https://github.com/github/gitignore/blob/main/Terraform.gitignore" target="_blank" rel="noopener noreferrer">GitHub&#x27;s Terraform ignore template</a> and the <a href="https://developer.hashicorp.com/terraform/language/style" target="_blank" rel="noopener noreferrer">Terraform style guide</a>.</p>
+<h3>Review before committing</h3>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Show which rule ignores this example file.
+git check-ignore -v secrets.tfvars
+
+# Review staged paths, then the staged content.
+git status --short
+git diff --cached</code></pre></div>
+<p>Run these checks locally and avoid sharing output containing secrets. If credentials were committed, revoke or rotate them and coordinate repository-history cleanup; adding an ignore rule alone cannot undo exposure. See <a href="https://git-scm.com/docs/gitignore" target="_blank" rel="noopener noreferrer">Git&#x27;s ignore rules</a>.</p></section>
 <section class="slide lesson" id="slide-23" data-anchor="22-backends-and-state-locking" data-topic="4" aria-label="Lesson 22 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 22 / 35</div><h1 tabindex="-1">Backends and state locking</h1><p>Backends define state storage. Locking capabilities depend on the backend and its settings; not every backend supports them.</p>
+<h3>Local versus remote state</h3>
+<p>Terraform persists state to track the real resources associated with configuration addresses. Without an explicit backend or HCP Terraform cloud configuration, it uses the local backend. For the default workspace, the default state path is <code>terraform.tfstate</code> in the root working directory. Local state is locked through operating-system APIs, but separate copies on teammates&#x27; computers do not become a shared record. See the <a href="https://developer.hashicorp.com/terraform/language/backend/local" target="_blank" rel="noopener noreferrer">local backend</a>.</p>
+<p>A remote backend lets authorized team members and runners use the same state. Keep configuration and the provider lock file in Git, and keep state in protected backend storage. An S3 backend stores state remotely; it does not move Terraform execution into S3.</p>
+<h3>Backend choices</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Backend type</th><th scope="col">State storage</th></tr></thead><tbody><tr><td><code>local</code></td><td>Local filesystem</td></tr><tr><td><code>s3</code></td><td>Amazon S3 objects</td></tr><tr><td><code>azurerm</code></td><td>Azure Blob Storage</td></tr><tr><td><code>gcs</code></td><td>Google Cloud Storage</td></tr><tr><td><code>consul</code></td><td>Consul key/value store</td></tr><tr><td><code>kubernetes</code></td><td>Kubernetes Secret</td></tr><tr><td><code>http</code></td><td>An HTTP service implementing the backend interface</td></tr></tbody></table></div>
+<p>Backend types are built into Terraform and have different authentication, locking, and workspace capabilities. The <code>etcd</code> and <code>etcdv3</code> backends shown in older course material are not supported in Terraform 1.3 or later; see the <a href="https://github.com/hashicorp/terraform/blob/main/internal/backend/init/init.go" target="_blank" rel="noopener noreferrer">backend implementation&#x27;s removal notices</a>. Refer to the <a href="https://developer.hashicorp.com/terraform/language/backend" target="_blank" rel="noopener noreferrer">backend overview</a> for supported choices.</p>
 <h3>S3 backend</h3>
 <p>For Terraform 1.10 or later, an S3 configuration can use native lock files:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform {
@@ -646,18 +800,48 @@ credentials.tfrc.json</code></pre></div>
   }
 }</code></pre></div>
 <p>Create the bucket beforehand. Configure restricted access, versioning, public-access protection, and permissions for both the state and lock objects. Backend credentials are separate from provider configuration.</p>
-<p>The source uses DynamoDB locking. It is a legacy method now marked deprecated in the <a href="https://developer.hashicorp.com/terraform/language/backend/s3" target="_blank" rel="noopener noreferrer">S3 backend documentation</a>. Check compatibility when migrating older installations.</p>
+<p>Here, <code>bucket</code> identifies the existing bucket, <code>key</code> is the state object&#x27;s path, and <code>region</code> locates the bucket. <code>use_lockfile</code> enables a separate <code>.tflock</code> object. Supply backend authentication through an approved credential source rather than embedding access keys in this block.</p>
+<h3>S3 permissions: state and lock objects</h3>
+<p>For the example above, scope permissions to these resources:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Target</th><th scope="col">Required S3 actions</th></tr></thead><tbody><tr><td>Bucket ARN: <code>arn:aws:s3:::replace-with-your-state-bucket</code></td><td><code>s3:ListBucket</code>, scoped to relevant prefixes</td></tr><tr><td>State ARN: <code>arn:aws:s3:::replace-with-your-state-bucket/networking/terraform.tfstate</code></td><td><code>s3:GetObject</code>, <code>s3:PutObject</code></td></tr><tr><td>Lock ARN: <code>arn:aws:s3:::replace-with-your-state-bucket/networking/terraform.tfstate.tflock</code></td><td><code>s3:GetObject</code>, <code>s3:PutObject</code>, <code>s3:DeleteObject</code></td></tr></tbody></table></div>
+<p>Deleting the lock releases it; normal operations do not require deleting the default state object. Non-default CLI workspaces need permissions for their additional paths, including state deletion for workspace cleanup. Customer-managed KMS encryption also requires appropriate key permissions. See the <a href="https://developer.hashicorp.com/terraform/language/backend/s3#permissions-required" target="_blank" rel="noopener noreferrer">S3 backend permissions</a>.</p>
+<h3>Legacy S3 locking with DynamoDB</h3>
+<p>Older configurations use <code>dynamodb_table</code> for locking. This method is deprecated; prefer native S3 lock files for supported Terraform versions. The following is an alternative historical configuration, not a second backend block to add alongside the earlier example:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform {
+  backend &quot;s3&quot; {
+    bucket         = &quot;replace-with-your-state-bucket&quot;
+    key            = &quot;dev/terraform.tfstate&quot;
+    region         = &quot;us-east-1&quot;
+    encrypt        = true
+    dynamodb_table = &quot;terraform-state-locks&quot;
+  }
+}</code></pre></div>
+<p>The table must already exist and have a partition key named exactly <code>LockID</code>, of type <code>String</code>. The backend identity needs <code>dynamodb:DescribeTable</code>, <code>dynamodb:GetItem</code>, <code>dynamodb:PutItem</code>, and <code>dynamodb:DeleteItem</code> on that table, in addition to S3 access.</p>
+<p>S3 locking is opt-in: if neither <code>use_lockfile</code> nor <code>dynamodb_table</code> enables a mechanism, the backend does not lock state. Both settings can coexist during a coordinated migration; verify client compatibility before removing DynamoDB locking. See the <a href="https://developer.hashicorp.com/terraform/language/backend/s3#state-locking" target="_blank" rel="noopener noreferrer">S3 locking documentation</a>.</p>
 <h3>Migrate an existing state</h3>
 <p>Back up the state, coordinate with other operators, configure the destination backend, then run:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform init -migrate-state</code></pre></div>
 <p>Review the migration prompts and verify the destination. <code>-reconfigure</code> is different: it reinitializes backend settings without performing the same state migration.</p>
 <h3>Lock handling</h3>
 <p>Locking prevents competing operations from writing the same state simultaneously. It cannot coordinate two unrelated state files that both manage the same real object.</p>
+<p>With a backend that supports locking and has it enabled, Terraform automatically acquires a lock for operations that could write state and releases it when finished. A successful lock may produce no visible message. A lock-acquisition failure stops the operation rather than allowing an unprotected write.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Step</th><th scope="col">User A</th><th scope="col">User B</th></tr></thead><tbody><tr><td>First operation starts</td><td>Acquires the state lock</td><td>Has not started</td></tr><tr><td>Another operation starts</td><td>Holds the lock while working</td><td>Cannot acquire the same lock; retries if configured or exits with an error</td></tr><tr><td>First operation finishes</td><td>Releases the lock</td><td>Can acquire it on a later attempt</td></tr></tbody></table></div>
+<p>The state lock protects concurrent access. It is different from <code>.terraform.lock.hcl</code>, which records provider selections. See <a href="https://developer.hashicorp.com/terraform/language/state/locking" target="_blank" rel="noopener noreferrer">state locking</a>.</p>
+<h3>Wait for a busy state</h3>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform plan -lock-timeout=5m</code></pre></div>
-<p>If a previous process crashed and left a lock, first confirm that no operation is still using it. Only then consider:</p>
-<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform force-unlock LOCK_ID</code></pre></div>
+<p>This allows up to five minutes of lock-acquisition retries. It does not cancel another user&#x27;s run or limit the total plan duration. If acquisition fails, read the error: the lock details may identify its ID, owner, operation, and creation time. Also check backend access or connectivity errors; not every locking failure means a stale lock.</p>
+<h3>Recover from a stale lock</h3>
+<p>Use <code>force-unlock</code> only for your own stale lock when automatic unlocking failed. Confirm the original process or CI run has stopped, coordinate with teammates, and verify the working directory, backend, and workspace before proceeding. Unlocking an active operation can allow concurrent writers and damage state.</p>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Replace LOCK_ID with the exact ID reported by Terraform.
+terraform force-unlock LOCK_ID</code></pre></div>
+<p>The full syntax is <code>terraform force-unlock [options] LOCK_ID</code>. The command removes the backend lock, not resources, and does not roll back an interrupted apply. The <code>-force</code> option skips confirmation; it does not make unlocking safer. Local state locks cannot be released by another process using this command; resolve the process holding the operating-system lock instead. After recovery, run a fresh plan to inspect the current situation. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/force-unlock" target="_blank" rel="noopener noreferrer">force-unlock reference</a>.</p>
 <p>Do not routinely bypass locking with <code>-lock=false</code>.</p></section>
-<section class="slide lesson" id="slide-24" data-anchor="23-state-management-commands" data-topic="4" aria-label="Lesson 23 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 23 / 35</div><h1 tabindex="-1">State management commands</h1><div class="table-wrap"><table><thead><tr><th scope="col">Command</th><th scope="col">Effect</th></tr></thead><tbody><tr><td><code>terraform state list</code></td><td>List managed addresses</td></tr><tr><td><code>terraform state show ADDRESS</code></td><td>Inspect recorded attributes</td></tr><tr><td><code>terraform state mv OLD NEW</code></td><td>Change an object&#x27;s state address</td></tr><tr><td><code>terraform state rm ADDRESS</code></td><td>Stop tracking an object without deleting it</td></tr><tr><td><code>terraform state pull</code></td><td>Print a snapshot of the current state</td></tr></tbody></table></div>
+<section class="slide lesson" id="slide-24" data-anchor="23-state-management-commands" data-topic="4" aria-label="Lesson 23 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 23 / 35</div><h1 tabindex="-1">State management commands</h1><div class="table-wrap"><table><thead><tr><th scope="col">Command</th><th scope="col">Effect</th></tr></thead><tbody><tr><td><code>terraform state list</code></td><td>List managed addresses</td></tr><tr><td><code>terraform state show ADDRESS</code></td><td>Inspect recorded attributes</td></tr><tr><td><code>terraform state mv OLD NEW</code></td><td>Change an object&#x27;s state address</td></tr><tr><td><code>terraform state rm ADDRESS</code></td><td>Stop tracking an object without deleting it</td></tr><tr><td><code>terraform state pull</code></td><td>Print a snapshot of the current state</td></tr><tr><td><code>terraform state push FILE</code></td><td>Replace the selected backend&#x27;s state with a local snapshot; advanced recovery operation</td></tr></tbody></table></div>
+<h3>Inspect addresses and attributes</h3>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform state list
+terraform state show aws_instance.app_server</code></pre></div>
+<p>Use an address returned by <code>state list</code>, not an AWS instance ID or its Name tag. For child resources, the address includes the module path. <code>state show</code> displays the recorded attributes of one resource instance; it is not a live AWS query. Sensitive fields may be redacted. See <a href="https://developer.hashicorp.com/terraform/cli/commands/state/show" target="_blank" rel="noopener noreferrer">state show</a>.</p>
+<h3>Rename a resource without recreating it</h3>
 <p>Example rename:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform state mv aws_instance.old_name aws_instance.new_name</code></pre></div>
 <p>Coordinate the matching configuration change. For a reviewable refactor, a <code>moved</code> block can record the address change in code:</p>
@@ -665,11 +849,22 @@ credentials.tfrc.json</code></pre></div>
   from = aws_instance.old_name
   to   = aws_instance.new_name
 }</code></pre></div>
+<h3>Remove a resource from management</h3>
 <p>Example removal from management:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform state rm aws_instance.legacy_server</code></pre></div>
 <p>The instance remains in AWS. If its resource block remains in configuration, the next plan may propose creating another instance. Adjust the configuration and ownership deliberately.</p>
-<p>Back up state before manual state operations, prevent concurrent changes, and review a full plan afterward. State snapshots may contain secrets.</p></section>
-<section class="slide lesson" id="slide-25" data-anchor="24-sharing-remote-state-outputs" data-topic="4" aria-label="Lesson 24 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 24 / 35</div><h1 tabindex="-1">Sharing remote state outputs</h1><p>Independent root configurations can share selected values through root outputs. For example, a network configuration exports a subnet:</p>
+<p>Back up state before manual state operations, prevent concurrent changes, and review a full plan afterward. State snapshots may contain secrets.</p>
+<h3>Pull a state snapshot</h3>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform state pull</code></pre></div>
+<p>This reads the selected backend, whether local or remote, and writes a raw snapshot to standard output. It does not automatically create a backup file. The installed Terraform version may upgrade the exported snapshot format. Save it securely if making a backup, preserve UTF-8 encoding without a byte-order mark, and check command success before using it. See <a href="https://developer.hashicorp.com/terraform/cli/commands/state/pull" target="_blank" rel="noopener noreferrer">state pull</a>.</p>
+<h3>Push a reviewed recovery snapshot</h3>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Advanced recovery only; FILE must be a reviewed state snapshot.
+terraform state push recovered.tfstate</code></pre></div>
+<p><code>state push</code> writes to the currently selected backend and workspace, including a local backend. It replaces state rather than merging snapshots or applying infrastructure changes. Confirm the destination, back up its current state, and stop competing operations first.</p>
+<p>Terraform rejects mismatched state lineage and a destination with a newer serial number. These checks help prevent overwriting unrelated or newer state. Do not bypass them with <code>-force</code> as a routine fix. Prefer <code>terraform init -migrate-state</code> for a normal backend migration. See <a href="https://developer.hashicorp.com/terraform/cli/commands/state/push" target="_blank" rel="noopener noreferrer">state push</a>.</p></section>
+<section class="slide lesson" id="slide-25" data-anchor="24-sharing-remote-state-outputs" data-topic="4" aria-label="Lesson 24 of 35" aria-hidden="true" style="--topic:#197c75;--tint:#e5f5f2"><div class="eyebrow">State and collaboration · LESSON 24 / 35</div><h1 tabindex="-1">Sharing remote state outputs</h1><p><code>terraform_remote_state</code> reads the latest saved snapshot from a configured local or remote backend. It exposes root outputs through <code>data.terraform_remote_state.NAME.outputs.OUTPUT_NAME</code>; a child&#x27;s output must first be exported by the producing root. Reading outputs does not transfer resource ownership.</p>
+<h3>Share a subnet through S3</h3>
+<p>Independent root configurations can share selected values through root outputs. For example, a network configuration exports a subnet:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>output &quot;subnet_id&quot; {
   value = aws_subnet.app.id
 }</code></pre></div>
@@ -690,10 +885,59 @@ resource &quot;aws_instance&quot; &quot;application&quot; {
   subnet_id     = data.terraform_remote_state.networking.outputs.subnet_id
 }</code></pre></div>
 <p>An EC2 <code>subnet_id</code> requires a subnet ID, not a VPC ID. The network state must already exist and contain the root output.</p>
-<p>Although the data source exposes outputs, the credentials used to retrieve them can generally access the whole state snapshot. Publish shared values through a dedicated store when consumers should not read the full state. Remote-state references do not automatically schedule upstream applies. See <a href="https://developer.hashicorp.com/terraform/language/state/remote-state-data" target="_blank" rel="noopener noreferrer">remote state data sources</a>.</p></section>
+<p>Although the data source exposes outputs, the credentials used to retrieve them can generally access the whole state snapshot. Publish shared values through a dedicated store when consumers should not read the full state. Remote-state references do not automatically schedule upstream applies. See <a href="https://developer.hashicorp.com/terraform/language/state/remote-state-data" target="_blank" rel="noopener noreferrer">remote state data sources</a>.</p>
+<h3>Read an HCP Terraform workspace</h3>
+<p>This alternative uses the <code>remote</code> backend to read an existing workspace. Replace both names and configure credentials and state-sharing access:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>data &quot;terraform_remote_state&quot; &quot;vpc&quot; {
+  backend = &quot;remote&quot;
+
+  config = {
+    organization = &quot;example-organization&quot;
+    workspaces = {
+      name = &quot;vpc-prod&quot;
+    }
+  }
+}</code></pre></div>
+<p>For a saved <code>subnet_id</code> output, read <code>data.terraform_remote_state.vpc.outputs.subnet_id</code>. HashiCorp recommends <code>tfe_outputs</code> for HCP Terraform/Enterprise when consumers should retrieve outputs without full state access. The data source&#x27;s backend identifies the state being read, not where the consumer stores its own state.</p>
+<h3>Network team to web team: share an Elastic IP</h3>
+<p>The network team owns the allocation; the web team owns its association with an instance. Extend the preceding S3 example, keeping the two teams&#x27; state files separate.</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>Network root: allocate EIP -&gt; save root outputs in networking state (S3)
+                                             |
+Web root: read allocation ID &lt;----------------+
+          associate it with EC2 -&gt; save association in separate web state</code></pre></div>
+<p>In the network configuration, with the AWS provider configured:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>resource &quot;aws_eip&quot; &quot;web&quot; {
+  domain = &quot;vpc&quot;
+}
+
+output &quot;web_eip_allocation_id&quot; {
+  value = aws_eip.web.id
+}
+
+output &quot;web_public_ip&quot; {
+  value = aws_eip.web.public_ip
+}</code></pre></div>
+<p>After the network team applies and saves those outputs, the web configuration can use its existing <code>networking</code> data source and <code>aws_instance.application</code> resource:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>resource &quot;aws_eip_association&quot; &quot;web&quot; {
+  instance_id         = aws_instance.application.id
+  allocation_id       = data.terraform_remote_state.networking.outputs.web_eip_allocation_id
+  allow_reassociation = false
+}</code></pre></div>
+<p>Use compatible AWS account, region, and network-border-group settings. This instance example assumes one attached network interface; otherwise specify the intended network interface instead. The allocation ID, not the public IP string, identifies the EIP for association. Keep association ownership in the web configuration rather than also setting <code>instance</code> on the network team&#x27;s EIP. An EIP alone does not supply internet routing or security-group access. See <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip_association" target="_blank" rel="noopener noreferrer">Elastic IP associations</a>.</p></section>
 <section class="slide lesson" id="slide-26" data-anchor="25-hcp-terraform-and-terraform-enterprise" data-topic="5" aria-label="Lesson 25 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 25 / 35</div><h1 tabindex="-1">HCP Terraform and Terraform Enterprise</h1><p>The source calls the hosted service “Terraform Cloud.” Its current name is <strong>HCP Terraform</strong>. Terraform Enterprise is the self-managed offering. Their purpose is to centralize execution, state, collaboration, and governance; availability of specific features depends on the offering and configuration.</p>
+<h3>Overview and learning route</h3>
+<p>This section covers the platform overview, offering types, execution modes, Cloud backend integration, supported VCS providers, and Sentinel. Continue to <a href="terraform.html#slide-27">Lesson 26: Sentinel policies</a> for a policy example and enforcement levels.</p>
+<h3>Hosted service versus self-managed platform</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Offering</th><th scope="col">Who operates the platform?</th><th scope="col">What the team manages</th></tr></thead><tbody><tr><td>HCP Terraform</td><td>HashiCorp hosts the service</td><td>Workspaces, configuration, credentials, access, and run settings</td></tr><tr><td>Terraform Enterprise</td><td>Your organization hosts its own installation</td><td>The platform infrastructure and administration, as well as its Terraform workflows</td></tr></tbody></table></div>
+<p>An HCP Terraform subscription tier and a Terraform Enterprise installation are different choices. Enterprise is a self-hosted distribution with its own deployment and operational requirements. See the <a href="https://developer.hashicorp.com/terraform/enterprise" target="_blank" rel="noopener noreferrer">Terraform Enterprise overview</a>.</p>
+<h3>HCP Terraform subscription plans</h3>
+<p>The documented plans are <strong>Free, Essentials, Standard, and Premium</strong>. Plans govern available capabilities and usage limits at the organization level; they do not change the Terraform language. Older training material may use different tier names. Check the <a href="https://developer.hashicorp.com/terraform/cloud-docs/overview" target="_blank" rel="noopener noreferrer">current plan comparison</a> for entitlements and limits before choosing a plan. Plan names and VCS support in this lesson were checked on November 25, 2026.</p>
+<h3>Workspace execution modes</h3>
 <p>An HCP Terraform workspace holds configuration-related settings, variables, state, and run history. Execution can be remote, local, or agent-based, depending on the workspace setup.</p>
-<p>For a modern configuration:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Mode</th><th scope="col">Where plans and applies run</th><th scope="col">Main distinction</th></tr></thead><tbody><tr><td>Remote</td><td>HCP Terraform&#x27;s managed workers</td><td>The service runs and coordinates Terraform operations</td></tr><tr><td>Agent</td><td>An agent in infrastructure you control</td><td>Runs can reach approved private infrastructure</td></tr><tr><td>Local</td><td>Your workstation or external runner</td><td>HCP Terraform stores state; execution stays with the CLI</td></tr></tbody></table></div>
+<p>A workspace can inherit the project&#x27;s default execution mode. In local mode, HCP Terraform does not evaluate workspace variables or variable sets; supply values where the CLI runs. The hosted run pipeline is not used simply because state is stored there. See <a href="https://developer.hashicorp.com/terraform/cloud-docs/workspaces/settings#execution-mode" target="_blank" rel="noopener noreferrer">workspace execution settings</a>.</p>
+<h3>Cloud backend and CLI integration</h3>
+<p>The <code>cloud</code> block connects the CLI configuration to an HCP Terraform or Terraform Enterprise workspace. The workspace&#x27;s execution mode determines where operations run. For a modern configuration:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform {
   cloud {
     organization = &quot;my-company-devops-org&quot;
@@ -717,7 +961,16 @@ terraform init</code></pre></div>
     }
   }
 }</code></pre></div>
-<p>These are alternatives, not blocks to combine. Configure AWS authentication where execution occurs; prefer supported short-lived credentials over embedding long-lived access keys. See the <a href="https://developer.hashicorp.com/terraform/language/block/terraform" target="_blank" rel="noopener noreferrer">Terraform configuration reference</a>.</p></section>
+<p>These are alternatives, not blocks to combine. Configure AWS authentication where execution occurs; prefer supported short-lived credentials over embedding long-lived access keys. See the <a href="https://developer.hashicorp.com/terraform/language/block/terraform" target="_blank" rel="noopener noreferrer">Terraform configuration reference</a>.</p>
+<p>For Terraform Enterprise, set <code>hostname</code> in the <code>cloud</code> block to your installation&#x27;s hostname and authenticate to that host. The token used to reach the Terraform platform is separate from credentials used by providers to manage AWS resources.</p>
+<h3>Supported VCS providers</h3>
+<p>HCP Terraform and Terraform Enterprise integrate with these provider families. The precise connection method depends on the product and VCS deployment:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Provider family</th><th scope="col">Documented variants</th></tr></thead><tbody><tr><td>GitHub</td><td>GitHub.com and GitHub Enterprise; App and OAuth options depend on the Terraform edition</td></tr><tr><td>GitLab</td><td>GitLab.com and self-managed GitLab EE/CE</td></tr><tr><td>Bitbucket</td><td>Bitbucket Cloud and Bitbucket Data Center</td></tr><tr><td>Azure DevOps</td><td>Azure DevOps Services and Azure DevOps Server</td></tr></tbody></table></div>
+<p>Connect an authorized VCS integration, then choose the repository, branch, and Terraform working directory for a workspace. Pull requests can trigger speculative plans for review. Changes to the tracked branch can queue runs; applying them follows the workspace&#x27;s approval and auto-apply settings. Connecting a repository does not automatically grant cloud-provider permissions. Follow the <a href="https://developer.hashicorp.com/terraform/cloud-docs/vcs" target="_blank" rel="noopener noreferrer">VCS provider setup guides</a> for authentication and connectivity requirements.</p>
+<h3>Where Sentinel fits</h3>
+<p>Sentinel evaluates policy as code against Terraform run data, for example to check required tags or allowed instance types. Policy sets associate rules with intended workspaces. A failed policy&#x27;s effect depends on its enforcement level and override permissions.</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>Configuration change -&gt; Plan -&gt; Configured policy checks -&gt; Approval -&gt; Apply</code></pre></div>
+<p>This illustrates a managed workspace run with manual approval. Sentinel checks belong to the configured platform workflow; a normal standalone CLI run does not automatically enforce the organization&#x27;s policies. See <a href="https://developer.hashicorp.com/terraform/cloud-docs/policy-enforcement" target="_blank" rel="noopener noreferrer">policy enforcement</a> and <a href="terraform.html#slide-27">Lesson 26</a>.</p></section>
 <section class="slide lesson" id="slide-27" data-anchor="26-sentinel-policies" data-topic="5" aria-label="Lesson 26 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 26 / 35</div><h1 tabindex="-1">Sentinel policies</h1><p>Sentinel implements policy as code. Policies can inspect Terraform run data and enforce rules before apply, such as allowed instance types or required tags.</p>
 <p>This simplified example rejects creates and updates using <code>t3.large</code>:</p>
 <div class="codebox"><div class="codebar"><span>sentinel</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>import &quot;tfplan/v2&quot; as tfplan
@@ -737,14 +990,44 @@ main = rule {
 <p>Attach policies to the intended workspaces through policy sets and review policy changes. See <a href="https://developer.hashicorp.com/terraform/cloud-docs/policy-enforcement/define-policies/custom-sentinel" target="_blank" rel="noopener noreferrer">Sentinel policy documentation</a>.</p></section>
 <section class="slide lesson" id="slide-28" data-anchor="27-security-and-vault" data-topic="5" aria-label="Lesson 27 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 27 / 35</div><h1 tabindex="-1">Security and Vault</h1><p>Infrastructure code can repeat both good and bad settings at scale. Protect credentials, state, plans, and the execution process together.</p>
 <p>Use least-privilege roles, separate environment access, reviewed dependency versions, state encryption, backups, and restricted state access. Keep secrets out of committed configuration and logs. The source names Trivy, Checkov, and TFLint as complementary checks; linting and scanning serve different purposes and do not replace plan review.</p>
+<h3>Storing secrets: best practices</h3>
+<ul><li>Never hardcode passwords, access keys, or tokens in <code>.tf</code> files, variable defaults, or other files committed to Git, including private repositories.</li><li>Store real secrets in an approved secrets manager. Supply them only to the users and processes that need them, preferably with short-lived credentials.</li><li>Avoid unprotected plaintext copies in <code>.tfvars</code>, shell startup files, logs, or saved plans. Restrict and encrypt stored state and backups.</li><li>A committed secret can spread through Git history, clones, build systems, and backups. Deleting the current line or adding <code>.gitignore</code> does not remove those copies. Revoke or rotate an exposed credential and follow your repository cleanup process.</li></ul>
+<p>Repository access does not provide a complete record of who used a copied secret. Central secret access controls and auditing help, but copies outside the manager still need protection. Review <a href="terraform.html#slide-22">team collaboration and .gitignore</a> for the repository rules.</p>
 <h3>Sensitive does not mean absent from state</h3>
-<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>variable &quot;database_password&quot; {
+<p>Mark private inputs and any outputs that expose them with <code>sensitive = true</code>. This fictional phone number example has no default: supply its value at runtime.</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>variable &quot;phone_number&quot; {
   type      = string
   sensitive = true
+}
+
+# Teaching example: only expose a private output when it is needed.
+output &quot;phone_number&quot; {
+  value     = var.phone_number
+  sensitive = true
 }</code></pre></div>
-<p><code>sensitive = true</code> redacts many user-interface displays. It does not, by itself, keep the value out of state or saved plans.</p>
+<p>Normal plan/apply displays redact the value as <code>(sensitive value)</code>. <strong>Redaction is not encryption:</strong> the value can still be stored in state and saved plans. Commands such as <code>terraform output -raw phone_number</code> and <code>terraform output -json</code> can reveal sensitive outputs; protect their destinations too. See <a href="https://developer.hashicorp.com/terraform/language/manage-sensitive-data" target="_blank" rel="noopener noreferrer">HashiCorp&#x27;s sensitive-data guide</a>.</p>
+<h3>Supply inputs through environment variables</h3>
+<p><code>TF_VAR_&lt;name&gt;</code> supplies a declared root input variable: <code>TF_VAR_phone_number</code> maps to <code>var.phone_number</code>. Pass it explicitly as an argument if a child module needs it. For local CLI runs, variable files and explicit <code>-var</code>/<code>-var-file</code> arguments can override this value; see <a href="terraform.html#slide-15">input precedence</a>.</p>
+<p>Use the fictional value below to learn the syntax. Run Terraform in the same terminal while the variable is set, then remove it.</p>
+<h4>Bash on Linux, WSL, or Git Bash</h4>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Fictional demo value only.
+export TF_VAR_phone_number=&quot;1234-5678&quot;
+terraform plan
+
+# Remove it from this shell&#x27;s environment.
+unset TF_VAR_phone_number</code></pre></div>
+<h4>PowerShell on Windows or Linux</h4>
+<div class="codebox"><div class="codebar"><span>powershell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Fictional demo value only; applies to this process and its children.
+$env:TF_VAR_phone_number = &quot;1234-5678&quot;
+terraform plan
+
+# Remove it from this PowerShell process&#x27;s environment.
+Remove-Item Env:TF_VAR_phone_number</code></pre></div>
+<p>Environment variables keep a value out of the configuration file; they do not encrypt it or prevent Terraform from storing it. A literal typed into a terminal may remain in shell history, and exported values are inherited by child processes. For real secrets, use your approved secret manager or CI secret injection instead of pasting literals into commands. Unsetting a variable does not erase history, existing child-process copies, state, or saved plans.</p>
+<p>Continue with the <a href="environment-variables.html#terraform">environment variables course</a> and the <a href="https://developer.hashicorp.com/terraform/cli/config/environment-variables#tf_var_name" target="_blank" rel="noopener noreferrer">Terraform environment-variable reference</a>.</p>
 <h3>Vault integration</h3>
-<p>Vault can provide centrally managed secrets and, with suitable secrets engines, dynamic credentials. A conceptual KV v2 read looks like this:</p>
+<p>HashiCorp Vault is a separate secrets-management service. It centralizes secret storage, access policies, and auditing and can issue dynamic credentials through suitable secrets engines. Terraform connects through the <code>hashicorp/vault</code> provider. See the <a href="https://developer.hashicorp.com/vault/docs/about-vault/what-is-vault" target="_blank" rel="noopener noreferrer">Vault overview</a>.</p>
+<p>A conceptual KV v2 read looks like this. It assumes a configured Vault server, a KV v2 engine mounted at <code>secret</code>, an existing <code>production/database</code> secret, and an authenticated identity with the required provider permissions:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Requires the hashicorp/vault provider and an authenticated Vault session.
 provider &quot;vault&quot; {
   address = &quot;https://vault.example.com:8200&quot;
@@ -757,27 +1040,100 @@ data &quot;vault_kv_secret_v2&quot; &quot;database&quot; {
 
 # A consuming expression could be:
 # data.vault_kv_secret_v2.database.data[&quot;admin_password&quot;]</code></pre></div>
+<p>Authenticate outside committed code using your team&#x27;s supported method. For example, the provider supports an injected <code>VAULT_TOKEN</code>; never put a real token in this example. Keep TLS verification enabled and grant only the permissions needed for the run. Refer to the <a href="https://registry.terraform.io/providers/hashicorp/vault/latest/docs" target="_blank" rel="noopener noreferrer">Vault provider documentation</a> for authentication and token requirements.</p>
 <p>A KV read is not automatically a dynamically generated credential. Ordinary data sources can persist their retrieved secrets in state, and consuming resources may persist them too. Secret rotation in Vault also does not automatically update every downstream service.</p>
-<p>Newer Terraform and provider versions support ephemeral values and write-only arguments in specific contexts. Use those only where the whole data path supports them; otherwise treat state as sensitive. See <a href="https://docs.hashicorp.com/terraform/language/manage-sensitive-data" target="_blank" rel="noopener noreferrer">managing sensitive data</a>.</p>
+<p>Newer Terraform and provider versions support ephemeral values and write-only arguments in specific contexts. Use those only where the whole data path supports them; otherwise treat state as sensitive. See <a href="https://developer.hashicorp.com/terraform/language/manage-sensitive-data" target="_blank" rel="noopener noreferrer">managing sensitive data</a>.</p>
+<p>Use the current <a href="https://developer.hashicorp.com/vault/install" target="_blank" rel="noopener noreferrer">Vault installation guide</a> for your operating system. Installing the executable alone does not configure a secure Vault server.</p>
 <p>For databases, also plan backups, deletion protection, and final snapshots. A tutorial&#x27;s shortened database block is not a complete production database configuration.</p></section>
 <section class="slide lesson" id="slide-29" data-anchor="28-dependency-graphs-and-module-downloads" data-topic="5" aria-label="Lesson 28 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 28 / 35</div><h1 tabindex="-1">Dependency graphs and module downloads</h1><h3>Terraform graph</h3>
+<p>Run this from an initialized configuration directory. By default, Terraform produces a simplified dependency graph of resources and data sources:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform graph</code></pre></div>
 <p>This emits DOT text representing dependencies. With Graphviz installed, produce an SVG:</p>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform graph | dot -Tsvg -o graph.svg</code></pre></div>
+<p>To visualize the operations for a saved plan instead:</p>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform plan -out=tfplan
+terraform graph -plan=tfplan | dot -Tsvg -o apply-graph.svg</code></pre></div>
+<p>The first command creates a plan; neither command applies it. Protect the saved plan because it can contain sensitive values. Graphviz is a separate program; its <code>dot</code> executable must be available on your PATH. Using <code>-o</code> lets Graphviz write the image directly on Bash or PowerShell.</p>
 <p>Dependency edges point from a dependent toward the object it depends on. Graphs help explain relationships and investigate cycles, but they are not network traffic diagrams or guarantees of application readiness.</p>
 <p>For the opening example:</p>
 <div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>EC2 instance → Subnet → VPC
       depends on       depends on</code></pre></div>
 <p>Creation respects those dependencies; deletion normally reverses the dependency requirements.</p>
+<p>DOT text can also be pasted into an online renderer, as demonstrated by WebGraphviz in the slides. Use only non-sensitive samples there; local rendering avoids sharing internal resource names and relationships. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/graph" target="_blank" rel="noopener noreferrer">graph command reference</a>.</p>
+<h3>Resource implicit dependency</h3>
+<p>Terraform infers ordering from references to other resources. Building on the <a href="terraform.html#slide-2">dependency introduction</a>, this fragment associates an Elastic IP with an existing EC2 resource in the same configuration:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Requires an aws_instance.myec2 resource and suitable VPC networking.
+resource &quot;aws_eip&quot; &quot;myeip&quot; {
+  domain   = &quot;vpc&quot;
+  instance = aws_instance.myec2.id
+}</code></pre></div>
+<p>The <code>instance</code> expression creates an implicit dependency on <code>aws_instance.myec2</code>. Terraform must obtain the instance ID before associating the address; the order of blocks in the file does not establish this relationship. Current AWS provider syntax uses <code>domain = &quot;vpc&quot;</code> instead of the older <code>vpc = &quot;true&quot;</code> shown in the slide. See the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/eip" target="_blank" rel="noopener noreferrer">Elastic IP resource reference</a>.</p>
+<h3>Resource explicit dependency</h3>
+<p>Use <code>depends_on</code> when behavior requires an order that the input expressions do not reveal. Suppose an application&#x27;s separately configured startup script expects an S3 bucket to exist, but the instance block never references the bucket&#x27;s attributes:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Fragment: declare these inputs and configure AWS before using it.
+resource &quot;aws_s3_bucket&quot; &quot;application&quot; {
+  bucket = var.application_bucket_name
+}
+
+resource &quot;aws_instance&quot; &quot;application&quot; {
+  ami                  = var.ami_id
+  instance_type        = &quot;t3.micro&quot;
+  subnet_id            = var.subnet_id
+  iam_instance_profile = var.application_instance_profile
+
+  # The application&#x27;s startup behavior requires this bucket to exist.
+  depends_on = [aws_s3_bucket.application]
+}</code></pre></div>
+<p>This declares ordering only. Configure the startup script and S3 permissions separately. If an expression already references <code>aws_s3_bucket.application.id</code>, that reference supplies the dependency without an extra <code>depends_on</code>. Broad explicit dependencies can make more values unknown during planning, so document the hidden requirement and keep the list narrow. See <a href="https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on" target="_blank" rel="noopener noreferrer">depends_on</a>.</p>
 <h3>Terraform get</h3>
 <div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform get
 terraform get -update</code></pre></div>
 <p><code>get</code> installs child modules. <code>get -update</code> checks already installed modules for updates permitted by their sources and constraints. It does not configure the backend or install providers in the way full initialization does.</p>
-<p><code>terraform init</code> normally handles module installation along with other initialization work. Downloaded modules are stored under <code>.terraform/modules/</code>; local module sources remain references to local directories. Keep your authored modules in Git and exclude the downloaded cache.</p></section>
-<section class="slide lesson" id="slide-30" data-anchor="29-publishing-modules-and-private-registries" data-topic="5" aria-label="Lesson 29 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 29 / 35</div><h1 tabindex="-1">Publishing modules and private registries</h1><h3>Publish a public module</h3>
+<p><code>terraform init</code> normally handles module installation along with other initialization work. Downloaded modules are stored under <code>.terraform/modules/</code>; local module sources remain references to local directories. Keep your authored modules in Git and exclude the downloaded cache.</p>
+<p>For example, after adding a remote <code>module</code> block to the root configuration, <code>terraform get</code> downloads its source. Use <code>-update</code> deliberately when refreshing installed modules; an update can change their behavior. Review constraints and the resulting plan. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/get" target="_blank" rel="noopener noreferrer">get command reference</a>.</p></section>
+<section class="slide lesson" id="slide-30" data-anchor="29-publishing-modules-and-private-registries" data-topic="5" aria-label="Lesson 29 of 35" aria-hidden="true" style="--topic:#4f46e5;--tint:#eef2ff"><div class="eyebrow">Platforms and security · LESSON 29 / 35</div><h1 tabindex="-1">Publishing modules and private registries</h1><p>Publishing makes reusable infrastructure code discoverable by other users. The Terraform Registry presents release history, README content, examples, and documentation generated from module declarations, including inputs and outputs. Anyone meeting its publishing requirements can share a public module.</p>
+<h3>Standard module structure</h3>
+<p>Use a predictable layout so readers and registry tooling can understand the module. A minimal recommended layout is:</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform-aws-training-network/
+  README.md       # Purpose and usage
+  main.tf         # Resources and module calls
+  variables.tf    # Input declarations and descriptions
+  outputs.tf      # Output declarations and descriptions</code></pre></div>
+<p>An expanded repository can add a license, version requirements, nested modules, and examples:</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform-aws-training-network/
+  README.md
+  LICENSE
+  main.tf
+  variables.tf
+  outputs.tf
+  versions.tf
+  modules/
+    subnet/
+      README.md
+      main.tf
+      variables.tf
+      outputs.tf
+  examples/
+    basic/
+      README.md
+      main.tf
+      variables.tf
+      outputs.tf</code></pre></div>
+<p>These filenames organize a module; Terraform loads its <code>.tf</code> files together. Nested directories are separate modules and require explicit calls. The repository root is the entry point; include optional directories only when useful. Describe each input and output, and explain prerequisites and usage in the README. See <a href="https://developer.hashicorp.com/terraform/language/modules/develop/structure" target="_blank" rel="noopener noreferrer">standard module structure</a>.</p>
+<h3>Publish a public module</h3>
 <p>The public registry&#x27;s GitHub publishing workflow uses a public repository named <code>terraform-PROVIDER-NAME</code>, such as <code>terraform-aws-training-network</code>.</p>
-<ol><li>Organize a reusable root module and include a README, input and output descriptions, and examples.</li><li>Remove secrets, state, and local caches.</li><li>Create a semantic-version Git tag, such as <code>v1.0.0</code>.</li><li>Sign in to the registry through GitHub and select the repository for module publication.</li><li>Publish later versions as reviewed releases.</li></ol>
+<ol><li>Organize a reusable root module and include a README, input and output descriptions, and examples. Add a short GitHub repository description.</li><li>Remove secrets, state, and local caches.</li><li>Create a semantic-version Git tag, such as <code>v1.0.0</code>.</li><li>Sign in to the registry through GitHub and select the repository for module publication.</li><li>Publish later versions as reviewed releases.</li></ol>
 <p>Tags use semantic versions; the <code>v</code> prefix is optional. Check the <a href="https://developer.hashicorp.com/terraform/registry/modules/publish" target="_blank" rel="noopener noreferrer">public module publishing requirements</a> before publishing.</p>
+<h3>Module versions and constraints</h3>
+<p>The optional <code>version</code> argument constrains modules installed from a registry, including public and private registries. Set it deliberately to control acceptable releases. This is the slide&#x27;s historical version example, not a recommendation of the latest release:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;iam&quot; {
+  source  = &quot;terraform-aws-modules/iam/aws&quot;
+  version = &quot;5.24.0&quot;
+}</code></pre></div>
+<p>Check the selected release&#x27;s README for its usable root module, submodules, and required inputs before using it in an application.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Constraint</th><th scope="col">Allowed versions</th></tr></thead><tbody><tr><td><code>5.24.0</code></td><td>Exactly 5.24.0</td></tr><tr><td><code>~&gt; 5.24.0</code></td><td>At least 5.24.0, below 5.25.0</td></tr><tr><td><code>~&gt; 5.24</code></td><td>At least 5.24.0, below 6.0.0</td></tr><tr><td><code>&gt;= 5.24.0, &lt; 6.0.0</code></td><td>The stated inclusive lower and exclusive upper bounds</td></tr></tbody></table></div>
+<p>Git and local sources do not accept this registry <code>version</code> argument. For Git, select a tag or commit with <code>?ref=...</code>; see <a href="terraform.html#slide-20">module sources</a>. Without a registry constraint, a fresh installation can select a newer release. Existing installations are normally reused until an update is requested.</p>
+<p>The <a href="terraform.html#slide-4">dependency lock file</a> records provider selections, not module versions. Review module upgrades explicitly and inspect a plan before applying. See the <a href="https://developer.hashicorp.com/terraform/language/block/module#version" target="_blank" rel="noopener noreferrer">module block reference</a>.</p>
 <h3>Private registry</h3>
 <p>A private registry lets an organization distribute modules to authorized users. For example:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>module &quot;secure_bucket&quot; {
@@ -802,6 +1158,12 @@ terraform get -update</code></pre></div>
 <p>Mirror every required provider for the target operating system and architecture. Vendor modules or use reachable internal Git servers or registries. The dependency lock file does not itself make Terraform offline.</p>
 <p>Choose a reachable backend. An S3-compatible internal service requires compatibility testing; it is not automatically identical to AWS S3. Provider installation also does not solve API connectivity: a fully isolated runner cannot manage public AWS endpoints without an approved network path.</p></section>
 <section class="slide lesson" id="slide-32" data-anchor="31-null-resources-and-terraform_data" data-topic="6" aria-label="Lesson 31 of 35" aria-hidden="true" style="--topic:#b86a00;--tint:#fff7ed"><div class="eyebrow">Lifecycle and validation · LESSON 31 / 35</div><h1 tabindex="-1">Null resources and terraform_data</h1><p><code>null_resource</code> is a resource from the <code>hashicorp/null</code> provider. It does not create a cloud object, but it has a lifecycle and can host provisioners.</p>
+<h3>What a null resource does</h3>
+<p>Terraform tracks the resource in state and can create, replace, or destroy it. By itself, it creates no VM, bucket, or other cloud infrastructure. A provisioner attached to it can still change real systems by running commands.</p>
+<p>The optional <code>triggers</code> argument is a <strong>map of strings</strong>. Terraform compares its stored values with the new values to decide whether replacement is needed:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Situation</th><th scope="col">Normal creation-time provisioner behavior</th></tr></thead><tbody><tr><td>First apply creates the null resource</td><td>Runs once during creation</td></tr><tr><td>Later apply with unchanged triggers and no other replacement reason</td><td>Does not run again</td></tr><tr><td>A trigger value changes</td><td>Resource is replaced; provisioner runs on the new instance</td></tr><tr><td>No triggers configured</td><td>Runs on initial creation; no automatic repeat on every apply</td></tr></tbody></table></div>
+<p>Unchanged triggers do not prevent other replacement causes, such as an explicit <code>-replace</code> request. A plan previews these actions; it does not run the provisioner. See the <a href="https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource" target="_blank" rel="noopener noreferrer">null_resource reference</a>.</p>
+<h3>Example: rerun setup when an endpoint changes</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Requires hashicorp/null and an existing database resource.
 resource &quot;null_resource&quot; &quot;database_setup&quot; {
   triggers = {
@@ -818,7 +1180,12 @@ resource &quot;null_resource&quot; &quot;database_setup&quot; {
 }</code></pre></div>
 <p>The endpoint reference already creates an implicit dependency. If its value changes, Terraform replaces the null resource and runs its creation-time provisioner again. An unchanged trigger does not continually rerun the script.</p>
 <p>The script must exist on the runner, have an appropriate interpreter, and tolerate retries. Terraform does not model every database change that the script makes.</p>
-<p>For new configurations, built-in <code>terraform_data</code> can handle similar lifecycle needs without an external provider:</p>
+<p>Changing the script file alone does not change the endpoint trigger. To track script edits too, add a value such as <code>script_hash = filesha256(&quot;${path.module}/scripts/init-db.sh&quot;)</code> to the triggers map; that file must already exist when Terraform evaluates it. Avoid an always-changing trigger unless every apply should deliberately repeat the action.</p>
+<h3>Local commands, remote commands, and data sources</h3>
+<ul><li><code>local-exec</code> runs on the machine executing Terraform: your workstation or an automation runner. Its command can invoke Bash, PowerShell, Python, or <code>ansible-playbook</code> when those programs and the required files are available there.</li><li><code>remote-exec</code> runs on a remote machine using a configured connection, such as SSH or WinRM. The runner needs network access and authentication; the remote host must support the requested commands.</li><li>A <code>data</code> block is a separate data-source declaration, not a provisioner to nest inside <code>null_resource</code>. You can reference a data-source attribute in <code>triggers</code> or provisioner settings, but the data source and the provisioner have different lifecycles.</li></ul>
+<p>For example, a <code>local-exec</code> command could be <code>python scripts/configure.py</code> or <code>ansible-playbook -i inventory.ini configure.yml</code>. These files are examples, not scripts supplied by this lesson. Set the working directory and interpreter explicitly when the runner&#x27;s defaults differ from your workstation. Keep credentials out of command strings and make scripts safe to retry. See <a href="https://developer.hashicorp.com/terraform/language/provisioners" target="_blank" rel="noopener noreferrer">provisioner guidance</a>.</p>
+<h3>Prefer terraform_data for new configurations</h3>
+<p>On Terraform 1.4 and later, built-in <code>terraform_data</code> can handle similar lifecycle needs without an external provider. Its <code>triggers_replace</code> argument explicitly requests replacement when its value changes:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>resource &quot;terraform_data&quot; &quot;database_setup&quot; {
   triggers_replace = [aws_db_instance.mysql.endpoint]
 
@@ -831,21 +1198,36 @@ resource &quot;null_resource&quot; &quot;database_setup&quot; {
   }
 }</code></pre></div>
 <p>Use provider-managed resources when possible. See the <a href="https://developer.hashicorp.com/terraform/language/resources/terraform-data" target="_blank" rel="noopener noreferrer">terraform_data reference</a>.</p></section>
-<section class="slide lesson" id="slide-33" data-anchor="32-resource-lifecycle-rules" data-topic="6" aria-label="Lesson 32 of 35" aria-hidden="true" style="--topic:#b86a00;--tint:#fff7ed"><div class="eyebrow">Lifecycle and validation · LESSON 32 / 35</div><h1 tabindex="-1">Resource lifecycle rules</h1><p>Lifecycle settings change how Terraform plans resource operations. These fragments belong inside a resource block.</p>
+<section class="slide lesson" id="slide-33" data-anchor="32-resource-lifecycle-rules" data-topic="6" aria-label="Lesson 32 of 35" aria-hidden="true" style="--topic:#b86a00;--tint:#fff7ed"><div class="eyebrow">Lifecycle and validation · LESSON 32 / 35</div><h1 tabindex="-1">Resource lifecycle rules</h1><p>The <code>lifecycle</code> meta-argument is a nested block inside a resource. It customizes Terraform&#x27;s normal create, update, replacement, and destroy behavior. Terraform compares configuration with tracked infrastructure; some changes allow an in-place update, while others require replacement.</p>
+<p>The examples below show individual rules. Merge the rules you need into the resource&#x27;s <code>lifecycle</code> block.</p>
 <h3>Prevent destruction</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>lifecycle {
   prevent_destroy = true
 }</code></pre></div>
 <p>Terraform rejects plans that would destroy the resource while this setting remains in configuration. Removing the entire resource block also removes this protection. Use service-level deletion controls and backups where needed.</p>
+<p>Use lowercase <code>prevent_destroy</code>, correcting the slide&#x27;s capitalization. It also blocks replacements that require deletion, but cannot stop someone deleting the object directly through a cloud console or API.</p>
 <h3>Ignore selected updates</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>lifecycle {
   ignore_changes = [tags[&quot;Owner&quot;]]
 }</code></pre></div>
 <p>This can let an external process manage an attribute after creation. It does not disable refresh. Ignoring <code>all</code> broadly gives up Terraform&#x27;s normal update management for that resource.</p>
-<h3>Create before destroy</h3>
+<p>To ignore the entire tags map, as in the slide, use this alternative:</p>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>lifecycle {
-  create_before_destroy = true
+  ignore_changes = [tags]
 }</code></pre></div>
+<p>The configured tags still apply at creation. Later update plans ignore differences for those attributes, including changes in your configuration. Prefer <code>tags[&quot;Owner&quot;]</code> when only that key is managed elsewhere.</p>
+<h3>Create before destroy</h3>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code># Requires declared ami_id and subnet_id inputs, plus AWS configuration.
+resource &quot;aws_instance&quot; &quot;example&quot; {
+  ami           = var.ami_id
+  instance_type = &quot;t3.micro&quot;
+  subnet_id     = var.subnet_id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}</code></pre></div>
+<p>When replacement is necessary, the default order is destroy old, then create new. This rule reverses that order; it does not force replacement on every apply.</p>
 <p>This changes replacement ordering. It does not guarantee zero downtime or application health; naming uniqueness, quotas, traffic switching, and readiness still matter.</p>
 <h3>Replace when another managed value changes</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>resource &quot;terraform_data&quot; &quot;release&quot; {
@@ -857,7 +1239,34 @@ resource &quot;null_resource&quot; &quot;database_setup&quot; {
 #   replace_triggered_by = [terraform_data.release]
 # }</code></pre></div>
 <p><code>replace_triggered_by</code> refers to managed resources or their attributes. Wrap a plain input in <code>terraform_data</code> when you need its changes represented by a resource lifecycle. See <a href="https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle" target="_blank" rel="noopener noreferrer">lifecycle rules</a>.</p></section>
-<section class="slide lesson" id="slide-34" data-anchor="33-variable-validation" data-topic="6" aria-label="Lesson 33 of 35" aria-hidden="true" style="--topic:#b86a00;--tint:#fff7ed"><div class="eyebrow">Lifecycle and validation · LESSON 33 / 35</div><h1 tabindex="-1">Variable validation</h1><p>Validation blocks express requirements for input values and provide useful error messages.</p>
+<section class="slide lesson" id="slide-34" data-anchor="33-variable-validation" data-topic="6" aria-label="Lesson 33 of 35" aria-hidden="true" style="--topic:#b86a00;--tint:#fff7ed"><div class="eyebrow">Lifecycle and validation · LESSON 33 / 35</div><h1 tabindex="-1">Variable validation</h1><p>Validation blocks express requirements for input values and provide useful error messages. A type constraint checks the kind of value; a nested <code>validation</code> block adds a custom rule. Its <code>condition</code> must evaluate to true for the value to pass. If it is false, Terraform reports <code>error_message</code> and blocks the operation.</p>
+<h3>Validate an AMI input</h3>
+<p>This example checks the prefix and a minimum length, then passes the input to EC2:</p>
+<div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>variable &quot;server_ami&quot; {
+  type        = string
+  nullable    = false
+  description = &quot;AMI ID for the EC2 instance in the selected AWS region.&quot;
+
+  validation {
+    condition     = length(var.server_ami) &gt; 4 &amp;&amp; startswith(var.server_ami, &quot;ami-&quot;)
+    error_message = &quot;server_ami must start with ami- and contain at least one character after the prefix.&quot;
+  }
+}
+
+# Fragment: configure AWS and declare subnet_id for your environment.
+resource &quot;aws_instance&quot; &quot;myec2&quot; {
+  ami           = var.server_ami
+  instance_type = &quot;t3.micro&quot;
+  subnet_id     = var.subnet_id
+
+  tags = {
+    Name = &quot;Server using ${var.server_ami}&quot;
+  }
+}</code></pre></div>
+<p><code>startswith</code> avoids the slide&#x27;s incorrect <code>substr(..., 0, 3)</code> comparison with the four-character prefix <code>ami-</code>. <code>nullable = false</code> rejects a null input.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Example input</th><th scope="col">Result of this rule</th></tr></thead><tbody><tr><td><code>ami-0123456789abcdef0</code></td><td>Passes this basic format check; fictional example</td></tr><tr><td><code>i-0123456789abcdef0</code></td><td>Fails: wrong prefix</td></tr><tr><td><code>ami-</code></td><td>Fails: nothing after the prefix</td></tr></tbody></table></div>
+<p>Passing does not prove that an AMI exists, is accessible in your region, or matches the instance architecture. Even <code>ami-not-real</code> passes this deliberately simple rule. See <a href="https://developer.hashicorp.com/terraform/language/validate#input-variable-validation" target="_blank" rel="noopener noreferrer">input validation</a>.</p>
+<h3>Restrict an input to supported choices</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>variable &quot;environment&quot; {
   type        = string
   description = &quot;The target deployment environment.&quot;
@@ -867,7 +1276,7 @@ resource &quot;null_resource&quot; &quot;database_setup&quot; {
     error_message = &quot;Environment must be dev, staging, or production.&quot;
   }
 }</code></pre></div>
-<p>A naming check:</p>
+<h3>Validate a naming convention</h3>
 <div class="codebox"><div class="codebar"><span>hcl</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>variable &quot;project_name&quot; {
   type = string
 
@@ -878,7 +1287,21 @@ resource &quot;null_resource&quot; &quot;database_setup&quot; {
 }</code></pre></div>
 <p>This pattern allows a leading digit or hyphen. To require a leading lowercase letter, use <code>^[a-z][a-z0-9-]*$</code> instead. Neither pattern alone validates every AWS resource&#x27;s naming requirements.</p>
 <p>Terraform evaluates conditions when their input values are known. Many failures are caught during planning; conditions depending on unknown values can be deferred. Validation improves errors but does not replace provider and service validation.</p></section>
-<section class="slide lesson" id="slide-35" data-anchor="34-practice-workflow" data-topic="7" aria-label="Lesson 34 of 35" aria-hidden="true" style="--topic:#15803d;--tint:#ecfdf5"><div class="eyebrow">Practice and corrections · LESSON 34 / 35</div><h1 tabindex="-1">Practice workflow</h1><p>Use the opening VPC, subnet, and instance files in a dedicated learning directory, together with the introductory AWS settings. Supply a real, compatible AMI ID and authenticated access to <code>us-east-1</code>.</p>
+<section class="slide lesson" id="slide-35" data-anchor="34-practice-workflow" data-topic="7" aria-label="Lesson 34 of 35" aria-hidden="true" style="--topic:#15803d;--tint:#ecfdf5"><div class="eyebrow">Practice and corrections · LESSON 34 / 35</div><h1 tabindex="-1">Practice workflow</h1><h3>Terraform best practices</h3>
+<p>Use this checklist alongside the detailed lessons when preparing a project for team use.</p>
+<h4>Code and reusable modules</h4>
+<ul><li>Keep Terraform code in Git and review changes. Exclude state, backups, logs, saved plans, and downloaded providers/modules with <code>.gitignore</code>; commit <code>.terraform.lock.hcl</code>. See <a href="terraform.html#slide-22">team collaboration</a>.</li><li>Run <code>terraform fmt</code> and <code>terraform validate</code>; an editor such as VS Code can help format code. Formatting is not validation, and validation does not confirm cloud permissions or deployment success.</li><li>Use input variables for environment-specific choices, such as AMIs and instance sizes. Intentional internal constants do not all need to become inputs.</li><li>Follow consistent resource-label and tag naming conventions. Reuse modules instead of copying resource definitions, and document each module&#x27;s purpose, inputs, outputs, and examples in its README.</li><li>Use locals and built-in functions to simplify repeated expressions. Keep expressions readable; see <a href="terraform.html#slide-17">functions and locals</a>.</li><li>Constrain Terraform, provider, and external module versions and review upgrades. See the <a href="https://developer.hashicorp.com/terraform/language/style" target="_blank" rel="noopener noreferrer">HashiCorp style guide</a>.</li></ul>
+<h4>State, environments, and credentials</h4>
+<ul><li>Store shared state in a secured remote backend, such as S3, with encryption, restricted access, and supported locking enabled. Keep recoverable backups or object versions and check your recovery procedure. See <a href="terraform.html#slide-23">backends and locking</a>.</li><li>Use Terraform&#x27;s state commands and declarative refactoring features instead of editing state JSON manually. Back up state before maintenance; see <a href="terraform.html#slide-24">state management</a>.</li><li>Use CLI workspaces when several deployments can safely share a configuration and backend access. They separate state but are not an access-control boundary. Use separate configurations/backends where stronger isolation is required; see <a href="terraform.html#slide-21">workspaces</a>.</li><li>Keep credentials out of code and committed variable files. Use approved authentication and secret injection, and protect state and plans that may retain sensitive data; see <a href="terraform.html#slide-28">security and Vault</a>.</li></ul>
+<h4>Repeatable deployment and adoption</h4>
+<ul><li>Automate formatting, validation, and plan review in CI/CD. Control who can apply, serialize runs against the same state, and use appropriately scoped credentials.</li><li>Use <code>terraform import</code> or import blocks to adopt existing objects when needed. Match the configuration to the imported object and review the next plan before applying; see <a href="terraform.html#slide-12">importing resources</a>.</li><li>Put environment-specific inputs in a selected variable file when useful. Supply real secrets separately and check which file and workspace the run uses.</li></ul>
+<p>For an existing, initialized configuration with a prepared <code>dev.tfvars</code> file:</p>
+<div class="codebox"><div class="codebar"><span>shell</span><button type="button" class="copy" aria-label="Copy code example">Copy</button></div><pre tabindex="0"><code>terraform fmt -check -recursive
+terraform validate
+terraform plan -var-file=&quot;dev.tfvars&quot; -out=dev.tfplan</code></pre></div>
+<p><code>fmt -check</code> reports formatting differences without rewriting files. <code>validate</code> checks configuration consistency; the plan evaluates the selected inputs against the target environment. Review the saved plan before an authorized apply, and protect it as sensitive data. See the <a href="https://developer.hashicorp.com/terraform/cli/commands/validate" target="_blank" rel="noopener noreferrer">validate command reference</a>.</p>
+<h3>Guided practice</h3>
+<p>Use the opening VPC, subnet, and instance files in a dedicated learning directory, together with the introductory AWS settings. Supply a real, compatible AMI ID and authenticated access to <code>us-east-1</code>.</p>
 <ol><li>Initialize with <code>terraform init</code>.</li><li>Format with <code>terraform fmt</code>.</li><li>Check the configuration with <code>terraform validate</code>.</li><li>Run <code>terraform plan -var=&quot;ami_id=YOUR_REAL_AMI_ID&quot; -out=training.tfplan</code>.</li><li>Review <code>terraform show training.tfplan</code>, including every resource and any deletion or replacement.</li><li>If the plan is correct, run <code>terraform apply training.tfplan</code>.</li><li>Inspect the resulting addresses with <code>terraform state list</code>.</li><li>Change a tag and plan again to observe an in-place update.</li><li>When finished, run <code>terraform destroy -var=&quot;ami_id=YOUR_REAL_AMI_ID&quot;</code> and review the proposed deletions before confirming.</li></ol>
 <p>This exercise demonstrates resource creation and dependencies. It does not configure SSH access, public routing, a web application, or a production-ready network.</p></section>
 <section class="slide lesson" id="slide-36" data-anchor="35-technical-corrections-to-the-source" data-topic="7" aria-label="Lesson 35 of 35" aria-hidden="true" style="--topic:#15803d;--tint:#ecfdf5"><div class="eyebrow">Practice and corrections · LESSON 35 / 35</div><h1 tabindex="-1">Technical corrections to the source</h1><p>The following corrections keep the tutorial&#x27;s examples and explanations consistent:</p>
