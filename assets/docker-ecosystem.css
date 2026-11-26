@@ -1,0 +1,28 @@
+.ecosystem-topic { border-top: 5px solid var(--accent); scroll-margin-top: 80px; }
+article.ecosystem-topic { margin-top: 32px; padding-top: 24px; }
+body.docker-deck .deck-slide.ecosystem-topic { border-top: 5px solid var(--accent); }
+.ecosystem-topic > h3 { font-size: clamp(26px,3vw,38px); margin: 0 0 16px; }
+.ecosystem-topic .source, .ecosystem-topic figcaption { font-size: 14px; }
+.ecosystem-topic details { margin: 18px 0; padding: 16px; background: var(--tint); border-radius: 10px; }
+.ecosystem-topic summary { cursor: pointer; font-weight: 700; }
+.ecosystem-topic details p { margin-top: 12px; }
+.ecosystem-flow, .ecosystem-boundaries { margin: 22px 0; padding: 20px; background: var(--tint); border-radius: 14px; border: 1px solid var(--line); }
+.ecosystem-flow-row { margin: 0 0 18px; }
+.ecosystem-flow-row > strong { display: block; margin-bottom: 8px; color: var(--accent); }
+.ecosystem-flow ol { display: flex; align-items: stretch; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.ecosystem-flow li { position: relative; flex: 1; min-width: 0; padding: 12px; text-align: center; border: 1px solid var(--accent); background: white; border-radius: 10px; }
+.ecosystem-flow li:not(:last-child)::after { content: "→"; position: absolute; right: -20px; top: 50%; transform: translateY(-50%); color: var(--accent); }
+.ecosystem-topic small { font-size: 13px; color: var(--muted); }
+.ecosystem-topic figcaption { color: var(--muted); margin-top: 14px; }
+.ecosystem-boundaries { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.ecosystem-boundaries > div { border: 1px solid var(--accent); border-radius: 12px; background: #fff; padding: 14px; text-align: center; }
+.ecosystem-boundaries strong { display: block; margin-bottom: 16px; }
+.ecosystem-boundaries span { display: block; background: var(--tint); padding: 10px; border-radius: 7px; }
+.ecosystem-boundaries b { display: block; color: var(--accent); }
+.ecosystem-boundaries figcaption { grid-column: 1 / -1; }
+@media (max-width: 650px) {
+ .ecosystem-flow ol { flex-direction: column; }
+ .ecosystem-flow li:not(:last-child)::after { content: "↓"; top: auto; bottom: -24px; right: 50%; transform: translateX(50%); }
+ .ecosystem-boundaries { grid-template-columns: 1fr; }
+ .ecosystem-flow, .ecosystem-boundaries { padding: 14px; }
+}

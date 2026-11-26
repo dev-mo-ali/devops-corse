@@ -31,6 +31,7 @@
     @media(max-width:600px){.topbar{padding:10px 15px}.topbar nav a:last-child{display:none}.grid,.grid.three,.two-col,.decision,.course-topics{grid-template-columns:1fr}.course-cover{min-height:0;padding:23px 19px}.topic-link{min-height:0}.topic{padding:20px 18px}.path{font-size:11px}}
     @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
   </style>
+  <link rel="stylesheet" href="assets/docker-ecosystem.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to lesson</a>
@@ -105,6 +106,13 @@
       <nav aria-label="Topic 6 sections">
         <a href="#topic-6" style="--dot:#08776a"><span class="nav-dot"></span>Docker fundamentals and architecture</a>
         <a href="#what-is-docker" style="--dot:#08776a"><span class="nav-dot"></span>What is Docker</a>
+        <a href="#container-ecosystem" style="--dot:#6d28d9"><span class="nav-dot"></span>1.1 · Docker in the ecosystem</a>
+        <a href="#vm-management-tools" style="--dot:#a85a13"><span class="nav-dot"></span>1.2 · VM tools and platforms</a>
+        <a href="#container-management-tools" style="--dot:#08776a"><span class="nav-dot"></span>1.3 · Engines, runtimes, and orchestration</a>
+        <a href="#container-isolation-runtimes" style="--dot:#a73566"><span class="nav-dot"></span>1.4 · Sandboxes and microVMs</a>
+        <a href="#docker-vs-dockerd" style="--dot:#1d4ed8"><span class="nav-dot"></span>1.5 · Docker vs docker vs dockerd</a>
+        <a href="#dockerd-vs-containerd" style="--dot:#0e7490"><span class="nav-dot"></span>1.6 · dockerd and containerd</a>
+        <a href="#docker-client-server-demo" style="--dot:#7c3aed"><span class="nav-dot"></span>1.7 · Check the client and server</a>
         <a href="#arch-components" style="--dot:#08776a"><span class="nav-dot"></span>Who handles a Docker command?</a>
         <a href="#live-architecture" style="--dot:#08776a"><span class="nav-dot"></span>Watch Docker work</a>
         <a href="#full-diagram" style="--dot:#08776a"><span class="nav-dot"></span>Docker architecture at a glance</a>
@@ -178,7 +186,7 @@
           <a class="topic-link" href="#topic-3" style="--card:#5d7423"><small>TOPIC 03</small><strong>VM vs container</strong><span>Architecture, tradeoffs, use cases, and running both together.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-4" style="--card:#007c7b"><small>TOPIC 04</small><strong>Set up Docker</strong><span>Install and verify Docker Engine on Ubuntu, or choose Docker Desktop.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-5" style="--card:#4655a7"><small>TOPIC 05</small><strong>Your first container on Windows 11</strong><span>Verify Docker Desktop, run hello-world, and open a web server.</span><em>Open topic →</em></a>
-          <a class="topic-link" href="#topic-6" style="--card:#233d53"><small>TOPIC 06</small><strong>Docker architecture, components and workflow</strong><span>Follow a run request from PowerShell to a running Nginx container.</span><em>Open topic →</em></a>
+          <a class="topic-link" href="#topic-6" style="--card:#233d53"><small>TOPIC 06</small><strong>Docker architecture, components and workflow</strong><span>Container tools, Docker vs docker vs dockerd, containerd, and the path from a command to a container.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-7" style="--card:#75508c"><small>TOPIC 07</small><strong>Basic Docker commands</strong><span>Run, inspect, stop, build, share, and clean up with a guided Nginx exercise.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-8" style="--card:#a34432"><small>TOPIC 08</small><strong>Container is a process</strong><span>Explore processes, PID 1, isolation, and the shared Linux kernel.</span><em>Open topic →</em></a>
           <a class="topic-link" href="#topic-9" style="--card:#1f5897"><small>TOPIC 09</small><strong>Does a container have an OS?</strong><span>Userspace, shared kernels, distribution images, and container host operating systems.</span><em>Open topic →</em></a>
@@ -711,6 +719,7 @@ docker rm class-web</code></pre></div>
         <p class="kicker">Section 1</p>
         <h2 id="docker-introduction-title">What is Docker</h2>
         <p>Docker provides tools to package applications and run them in containers. Packaging the application with its dependencies reduces differences between development, testing, and production. Linux containers share the Docker host’s kernel, which helps keep their resource overhead low.</p>
+<p><strong>Docker is one of several container tools.</strong> Explore <a href="#container-ecosystem">the wider ecosystem</a>, then distinguish <a href="#docker-vs-dockerd">Docker, docker, and dockerd</a> and see <a href="#dockerd-vs-containerd">where containerd fits</a>.</p>
         <div class="grid three">
           <div class="mini"><h3>Dockerfile</h3><p>A text file containing build instructions, such as selecting a base image and copying application files.</p></div>
           <div class="mini"><h3>Image</h3><p>A reusable, read-only template containing filesystem layers and configuration used to create containers.</p></div>
@@ -719,6 +728,122 @@ docker rm class-web</code></pre></div>
         <div class="callout"><p><strong>Follow the lifecycle.</strong> Build an image from a Dockerfile, push it to a registry, pull it onto another compatible host, and create a container from it. Docker Hub is a hosted registry for finding and sharing images.</p></div>
         <p class="source">Introduction adapted from <a href="https://www.geeksforgeeks.org/devops/introduction-to-docker/" target="_blank" rel="noopener">What is Docker? — GeeksforGeeks</a>.</p>
       <p class="slide-detail-link"><a href="docker-architecture.html#what-is-docker" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p></section>
+
+      <section class="topic ecosystem-topic" id="container-ecosystem" style="--accent:#6d28d9;--tint:#f5f3ff">
+<p class="kicker">Topic 06 · Section 1.1</p><h2>Docker is one way to run containers</h2>
+<p>Containers are a way to package and isolate workloads. <strong>Docker is one platform for building, running, and managing them.</strong> Other tools can use the same underlying Linux features and compatible container images.</p>
+<figure class="ecosystem-flow" aria-labelledby="ecosystem-flow-caption">
+<div class="ecosystem-flow-row"><strong>Docker path</strong><ol><li>Docker Engine</li><li>containerd</li><li>OCI runtime<br><small>often runc</small></li><li>Container processes</li></ol></div>
+<div class="ecosystem-flow-row"><strong>Podman path</strong><ol><li>Podman</li><li>OCI runtime<br><small>such as crun or runc</small></li><li>Container processes</li></ol></div>
+<div class="ecosystem-flow-row"><strong>Kubernetes path</strong><ol><li>Node’s kubelet</li><li>CRI runtime<br><small>containerd or CRI-O</small></li><li>Configured runtime</li><li>Processes or sandbox</li></ol></div>
+<figcaption id="ecosystem-flow-caption">Simplified alternative paths. Kubernetes orchestrates the workload; the kubelet asks a runtime to run it through the Container Runtime Interface (CRI).</figcaption>
+</figure>
+<div class="callout"><p><strong>Docker Engine is optional for Kubernetes.</strong> A cluster can use containerd directly. Docker Engine integration uses an adapter such as <code>cri-dockerd</code>.</p></div>
+<p>OCI standards help tools exchange images and run containers. Compatibility still depends on the image’s operating system, CPU architecture, and required runtime features.</p>
+<p class="source">See <a href="https://containerd.io/">containerd</a>, <a href="https://docs.podman.io/en/latest/">Podman</a>, and <a href="https://kubernetes.io/docs/setup/production-environment/container-runtimes/">Kubernetes container runtimes</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#container-ecosystem" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="vm-management-tools" style="--accent:#a85a13;--tint:#fff7ed">
+<p class="kicker">Topic 06 · Section 1.2</p><h2>Tools for virtual machines</h2>
+<p>A hypervisor supplies virtual hardware. A management platform adds controls for creating, operating, and organizing VMs. Some platforms also manage Linux containers.</p>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Role</th><th>Example use</th></tr></thead><tbody>
+<tr><td><a href="https://www.vmware.com/products/cloud-infrastructure/vsphere">VMware vSphere</a></td><td>Enterprise virtualization platform, with ESX/ESXi hosts and vCenter management.</td><td>Manage VMs across a data center.</td></tr>
+<tr><td><a href="https://www.proxmox.com/en/products/proxmox-virtual-environment/features">Proxmox VE</a></td><td>Open-source platform combining KVM-based VMs and LXC containers.</td><td>Manage both workload types through one web interface.</td></tr>
+<tr><td><a href="https://learn.microsoft.com/en-us/windows-server/virtualization/hyper-v/overview">Microsoft Hyper-V</a></td><td>Hypervisor technology in supported Windows and Windows Server editions.</td><td>Run guest operating systems on a Windows host.</td></tr>
+<tr><td><a href="https://www.linux-kvm.org/page/Main_Page">KVM</a></td><td>Virtualization support in the Linux kernel, commonly paired with QEMU and management tools.</td><td>Provide the virtualization foundation beneath a Linux VM platform.</td></tr>
+<tr><td><a href="https://download.virtualbox.org/virtualbox/7.2.0/UserManual.pdf">Oracle VirtualBox</a></td><td>Desktop virtualization software available on multiple host platforms.</td><td>Create a local VM for learning, development, or testing.</td></tr>
+</tbody></table></div>
+<div class="callout"><p><strong>VMs and containers can work together.</strong> A VM created by one of these platforms can itself be a Docker host or a Kubernetes node.</p></div>
+<p>Hyper-V also supports <a href="https://learn.microsoft.com/en-us/virtualization/windowscontainers/manage-containers/hyperv-container">Hyper-V isolation for Windows containers</a>, where a container runs inside an optimized VM with its own kernel.</p>
+<p class="source">Tool names link to official documentation. Background reading: <a href="https://www.suse.com/blog/the-total-virtual-machine-management-guide/">SUSE’s VM management guide</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#vm-management-tools" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="container-management-tools" style="--accent:#08776a;--tint:#ecfdf5">
+<p class="kicker">Topic 06 · Section 1.3</p><h2>Which container tool does which job?</h2>
+<div class="table-scroll"><table><thead><tr><th>Tool</th><th>Main role</th><th>What students should remember</th></tr></thead><tbody>
+<tr><td>Docker</td><td>Application container platform</td><td>Build images, run containers, and manage their networks and volumes.</td></tr>
+<tr><td><a href="https://docs.podman.io/en/latest/">Podman</a></td><td>Container engine</td><td>A daemonless engine for images, containers, and pods, with a CLI familiar to Docker users.</td></tr>
+<tr><td><a href="https://containerd.io/">containerd</a></td><td>Container runtime service</td><td>Manages images and container lifecycle; used beneath Docker and in many Kubernetes clusters.</td></tr>
+<tr><td><a href="https://kubernetes.io/docs/concepts/overview/">Kubernetes</a></td><td>Container orchestration</td><td>Schedules workloads and manages deployment, scaling, and recovery across nodes.</td></tr>
+<tr><td><a href="https://linuxcontainers.org/lxc/introduction/">LXC</a></td><td>Linux container tools and library</td><td>Often used for system containers with a fuller Linux userspace sharing the host kernel.</td></tr>
+<tr><td><a href="https://canonical.com/lxd/docs/latest/explanation/instances/">LXD</a></td><td>System container and VM manager</td><td>Uses LXC for system containers and QEMU for VMs; offers a unified management experience.</td></tr>
+</tbody></table></div>
+<p><strong>Example team workflow:</strong> build an application image with Docker, publish it to a registry, and deploy it to Kubernetes nodes using containerd. The nodes can run that compatible image without Docker Engine.</p>
+<details><summary>Why does this course use Docker?</summary><p>Docker gives us one practical interface for learning images, containers, ports, and persistent data. Those concepts carry over to other tools, even when commands and management features differ.</p></details>
+<p class="source">See <a href="https://docs.docker.com/get-started/docker-overview/">Docker overview</a>, <a href="https://kubernetes.io/docs/setup/production-environment/container-runtimes/">Kubernetes runtime integration</a>, and <a href="https://aws.amazon.com/what-is/containerization/">AWS’s containerization explanation</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#container-management-tools" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="container-isolation-runtimes" style="--accent:#a73566;--tint:#fff1f5">
+<p class="kicker">Topic 06 · Section 1.4</p><h2>Different ways to isolate a workload</h2>
+<p>Some workloads need an additional isolation boundary. These technologies change how workloads run beneath the management tools.</p>
+<div class="table-scroll"><table><thead><tr><th>Technology</th><th>How it works</th><th>Its role</th></tr></thead><tbody>
+<tr><td><a href="https://firecracker-microvm.github.io/">Firecracker</a></td><td>A lightweight virtual machine monitor using KVM to create microVMs with guest kernels.</td><td>A building block for services that provision isolated VMs.</td></tr>
+<tr><td><a href="https://katacontainers.io/">Kata Containers</a></td><td>Integrates lightweight VMs into container workflows, adding a guest-kernel boundary.</td><td>A container runtime option that can isolate a pod or workload inside a VM.</td></tr>
+<tr><td><a href="https://gvisor.dev/docs/">gVisor</a></td><td>A userspace application kernel handles workload system calls and mediates host access.</td><td>Its <code>runsc</code> runtime integrates with container tools. This is a different model from booting a normal guest OS.</td></tr>
+</tbody></table></div>
+<figure class="ecosystem-boundaries" aria-labelledby="ecosystem-boundaries-caption">
+<div><strong>Standard Linux container</strong><span>Application</span><b aria-hidden="true">↓</b><span>Host Linux kernel<br><small>namespaces, cgroups, security controls</small></span></div>
+<div><strong>gVisor sandbox</strong><span>Application</span><b aria-hidden="true">↓</b><span>Userspace application kernel</span><b aria-hidden="true">↓</b><span>Host kernel / platform</span></div>
+<div><strong>VM-based isolation</strong><span>Application + guest kernel</span><b aria-hidden="true">↓</b><span>VMM / hypervisor boundary</span><b aria-hidden="true">↓</b><span>Host platform</span></div>
+<figcaption id="ecosystem-boundaries-caption">Conceptual isolation boundaries, not a performance ranking. Compatibility, overhead, configuration, and the threat model affect the choice.</figcaption>
+</figure>
+<p class="source">Descriptions follow the official <a href="https://firecracker-microvm.github.io/">Firecracker</a>, <a href="https://katacontainers.io/">Kata Containers</a>, and <a href="https://gvisor.dev/docs/">gVisor</a> projects. Suggested comparison reading: <a href="https://rywalker.com/research/container-vm-runtimes">container-to-VM runtimes</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#container-isolation-runtimes" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="docker-vs-dockerd" style="--accent:#1d4ed8;--tint:#eff6ff">
+<p class="kicker">Topic 06 · Section 1.5</p><h2>Docker, docker, and dockerd</h2>
+<p><strong>Docker</strong> names the broader container platform. In a terminal, <code>docker</code> names its command-line client. <code>dockerd</code> is the Docker daemon: a service that keeps running in the background.</p>
+<div class="table-scroll"><table><thead><tr><th>Name</th><th>What it is</th><th>What you do with it</th></tr></thead><tbody>
+<tr><td><strong>Docker</strong></td><td>The platform and tool ecosystem.</td><td>Build, share, and run containerized applications.</td></tr>
+<tr><td><code>docker</code></td><td>The CLI client you invoke.</td><td>Send requests such as <code>docker ps</code> or <code>docker run</code>.</td></tr>
+<tr><td><code>dockerd</code></td><td>The server process serving the Engine API.</td><td>Manages Docker images, containers, networks, and volumes; delegates runtime work to containerd.</td></tr>
+<tr><td><strong>Docker Engine</strong></td><td>The client/server technology: daemon, API, and CLI.</td><td>Provides the core container engine.</td></tr>
+<tr><td><strong>Docker Desktop</strong></td><td>A desktop application bundling Engine and developer tools.</td><td>Manages the local backend and provides a graphical interface.</td></tr>
+</tbody></table></div>
+<div class="callout"><p><strong>Remember the “d”:</strong> <code>dockerd</code> means Docker daemon. The client sends a request; the daemon handles it. They can run on different machines.</p></div>
+<p class="source">References: <a href="https://docs.docker.com/engine/">Docker Engine</a>, <a href="https://docs.docker.com/reference/cli/docker/">docker CLI</a>, <a href="https://docs.docker.com/reference/cli/dockerd/">dockerd reference</a>, and <a href="https://docs.docker.com/desktop/">Docker Desktop</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#docker-vs-dockerd" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="dockerd-vs-containerd" style="--accent:#0e7490;--tint:#ecfeff">
+<p class="kicker">Topic 06 · Section 1.6</p><h2>Where does containerd fit?</h2>
+<p><strong>dockerd and containerd are different components that work together.</strong> Docker adds the user-facing tools and Engine API; containerd is a separate runtime project that can also serve other platforms.</p>
+<figure class="ecosystem-flow" aria-labelledby="docker-runtime-path-caption">
+<div class="ecosystem-flow-row"><strong>Typical Linux container launch</strong><ol>
+<li><code>docker</code><br><small>CLI sends an Engine API request</small></li>
+<li><code>dockerd</code><br><small>Coordinates Docker objects and settings</small></li>
+<li><code>containerd</code><br><small>Manages runtime lifecycle</small></li>
+<li>shim + <code>runc</code><br><small>Supervision + process launch</small></li>
+<li>Container<br><small>Application process</small></li>
+</ol></div>
+<figcaption id="docker-runtime-path-caption">A simplified launch sequence. The shim supervises the process; runc sets it up and starts it, then exits. Runtime choices can differ.</figcaption>
+</figure>
+<div class="grid"><div class="mini"><h4>dockerd: Docker management</h4><p>Handles Docker API requests and coordinates images, network configuration, mounts, and container creation.</p></div><div class="mini"><h4>containerd: runtime management</h4><p>Provides image and container lifecycle services. In the usual Linux stack, it works through a shim and an OCI runtime such as runc.</p></div></div>
+<div class="callout"><p><strong>They are layers, not interchangeable commands.</strong> The Docker CLI expects the Docker Engine API. A standalone containerd service does not provide that API; tools such as <code>nerdctl</code> can talk to containerd.</p></div>
+<p>Kubernetes can use containerd through CRI without dockerd. Docker-compatible images do not require Docker Engine on every machine that runs them.</p>
+<p class="source">Based on <a href="https://www.docker.com/blog/containerd-vs-docker/">Docker: containerd vs. Docker</a>, the <a href="https://containerd.io/">containerd project</a>, <a href="https://github.com/containerd/nerdctl">nerdctl</a>, and <a href="https://kubernetes.io/docs/setup/production-environment/container-runtimes/">Kubernetes runtimes</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#dockerd-vs-containerd" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
+
+      <section class="topic ecosystem-topic" id="docker-client-server-demo" style="--accent:#7c3aed;--tint:#f5f3ff">
+<p class="kicker">Topic 06 · Section 1.7</p><h2>See the client and server separately</h2>
+<p>On your Windows 11 laptop, start Docker Desktop and wait for its engine to be ready. Open PowerShell and inspect the installation:</p>
+<div class="codebox"><div class="code-label">PowerShell · client only</div><pre>docker --version</pre></div>
+<p>This prints the installed CLI version. It can succeed even when the daemon is unavailable.</p>
+<div class="codebox"><div class="code-label">PowerShell · client and server</div><pre>docker version</pre></div>
+<p>Look for <strong>Client</strong> (the CLI) and <strong>Server</strong> (the selected Engine). The server section can also list containerd and runc. Versions and fields depend on your installation.</p>
+<div class="codebox"><div class="code-label">PowerShell · connection and running containers</div><pre>docker context show
+docker ps</pre></div>
+<p>The context identifies the selected connection; <code>docker ps</code> queries its daemon. An empty list can simply mean no containers are running.</p>
+<div class="callout"><p><strong>If the client works but the server cannot be reached:</strong> check Docker Desktop's engine status and the selected connection. A working CLI alone does not prove the engine is ready.</p></div>
+<p>With Docker Desktop's Linux container backend, PowerShell runs the Windows client while the daemon and containers run in a Linux environment, commonly provided by WSL 2. Docker Desktop manages that backend; this demo does not require starting <code>dockerd</code> manually in PowerShell.</p>
+<p class="source">References: <a href="https://docs.docker.com/reference/cli/docker/version/">docker version</a>, <a href="https://docs.docker.com/reference/cli/docker/">CLI options</a>, <a href="https://docs.docker.com/engine/manage-resources/contexts/">Docker contexts</a>, and <a href="https://docs.docker.com/desktop/features/wsl/">Docker Desktop with WSL 2</a>.</p>
+<p class="slide-detail-link"><a href="docker-architecture.html#docker-client-server-demo" target="_blank" rel="noopener">Open the detailed lesson ↗</a></p>
+      </section>
 
 <section class="topic" id="arch-components" style="--accent:#235795;--tint:#e9f3ff">
         <p class="kicker">Components</p>
